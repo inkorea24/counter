@@ -1130,8 +1130,8 @@
     });
   }
 
-  document.getElementById('singlePlus').addEventListener('click', () => { singleCount++; renderSingle(); });
-  document.getElementById('singleMinus').addEventListener('click', () => { singleCount--; renderSingle(); });
+  document.getElementById('singlePlus').addEventListener('click', () => { singleCount++; renderSingle(); feedback('tap'); });
+  document.getElementById('singleMinus').addEventListener('click', () => { singleCount--; renderSingle(); feedback('tap'); });
   document.getElementById('singleReset').addEventListener('click', () => {
     if (singleCount !== 0) {
       singleHistory.unshift(singleCount);
@@ -1140,6 +1140,7 @@
     }
     singleCount = 0;
     renderSingle();
+    feedback('tap');
   });
 
   renderSingleHistory();
