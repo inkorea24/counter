@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>A/B 카운터</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="A/B 카운터">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --accent: #0f172a;
+    --accent-soft: #f1f5f9;
+  }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overscroll-behavior: none;
+    user-select: none;
+    background: #0f172a;
+  }
+  .app {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 24px 20px;
+    position: relative;
+    transition: background 0.25s ease;
+  }
+  .label {
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    opacity: 0.9;
+    padding: 4px 10px;
+    border-radius: 8px;
+    max-width: 90%;
+    text-align: center;
+    outline: none;
+    border: none;
+    background: transparent;
+  }
+  .label:focus { background: rgba(255,255,255,0.15); }
+  .count {
+    font-size: 68px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    position: relative;
+  }
+  .crown {
+    position: absolute;
+    top: -34px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 22px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .crown.show { opacity: 1; }
+  .buttons {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 340px;
+  }
+  button.action {
+    flex: 1;
+    border: none;
+    border-radius: 16px;
+    padding: 16px 0;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.08s ease, opacity 0.15s ease;
+    color: #ffffff;
+    background: rgba(255,255,255,0.18);
+  }
+  button.action:active { transform: scale(0.93); opacity: 0.8; }
+  button.reset { flex: 0.6; font-size: 17px; }
+
+  /* color themes */
+  .theme-blue   { background: #2563eb; color: #ffffff; }
+  .theme-emerald{ background: #059669; color: #ffffff; }
+  .theme-rose   { background: #e11d48; color: #ffffff; }
+  .theme-amber  { background: #d97706; color: #ffffff; }
+  .theme-violet { background: #7c3aed; color: #ffffff; }
+  .theme-slate  { background: #334155; color: #ffffff; }
+
+  .divider {
+    height: 1px;
+    background: rgba(255,255,255,0.15);
+  }
+
+  .swap-bar {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+  }
+  .swap-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: none;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--accent);
+  }
+  .swap-btn:active { transform: scale(0.9); }
+
+  .diff-badge {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateY(54px);
+    z-index: 9;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.55);
+    background: rgba(0,0,0,0.25);
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .dice-btn {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) translateY(-54px);
+    z-index: 10;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: none;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--accent);
+  }
+  .dice-btn:active { transform: translate(-50%, -50%) translateY(-54px) scale(0.9); }
+
+  .dice-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+  .dice-overlay.show { display: flex; }
+  .dice-card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 32px 28px;
+    width: 90%;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .dice-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #64748b;
+  }
+  .dice-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .dice-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .dice-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1e293b;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .dice-face {
+    font-size: 56px;
+    line-height: 1;
+  }
+  .dice-vs {
+    font-size: 13px;
+    font-weight: 700;
+    color: #cbd5e1;
+  }
+  .dice-result {
+    font-size: 16px;
+    font-weight: 800;
+    color: #059669;
+    min-height: 22px;
+    text-align: center;
+  }
+  .dice-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+  .dice-actions button {
+    flex: 1;
+    border: none;
+    border-radius: 14px;
+    padding: 12px 0;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .dice-roll-btn { background: var(--accent); color: #ffffff; }
+  .dice-close-btn { background: #f1f5f9; color: #64748b; }
+
+  .toolbar {
+    position: fixed;
+    top: calc(max(env(safe-area-inset-top, 12px), 12px) + 52px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    gap: 8px;
+  }
+  .tool-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--accent);
+  }
+  .tool-btn:active { transform: scale(0.9); }
+  .tool-btn.disabled { opacity: 0.35; pointer-events: none; }
+
+  .rounds-bar {
+    position: fixed;
+    top: calc(max(env(safe-area-inset-top, 12px), 12px) + 100px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    background: rgba(255,255,255,0.95);
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #1e293b;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    white-space: nowrap;
+  }
+
+  /* generic modal reuse */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 24px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 28px 26px;
+    width: 100%;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .modal-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1e293b;
+    text-align: center;
+  }
+  .modal-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .modal-row-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #475569;
+  }
+  .modal-input {
+    width: 90px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    font-size: 15px;
+    text-align: center;
+    font-weight: 700;
+  }
+  .switch {
+    position: relative;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-slider {
+    position: absolute;
+    inset: 0;
+    background: #e2e8f0;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    top: 3px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: transform 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .switch input:checked + .switch-slider { background: #059669; }
+  .switch input:checked + .switch-slider::before { transform: translateX(20px); }
+
+  .modal-close-btn {
+    border: none;
+    border-radius: 14px;
+    padding: 12px 0;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    background: #f1f5f9;
+    color: #64748b;
+  }
+
+  .timer-display {
+    font-size: 52px;
+    font-weight: 800;
+    color: #1e293b;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer-presets {
+    display: flex;
+    gap: 8px;
+  }
+  .timer-preset-btn {
+    flex: 1;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 0;
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .timer-preset-btn.active { background: var(--accent); color: #ffffff; }
+  .timer-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .timer-actions button {
+    flex: 1;
+    border: none;
+    border-radius: 14px;
+    padding: 12px 0;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .timer-start-btn { background: #059669; color: #ffffff; }
+  .timer-reset-btn { background: #f1f5f9; color: #64748b; }
+  .timer-display.warn { color: #e11d48; }
+
+  .win-card {
+    text-align: center;
+    gap: 20px;
+  }
+  .win-emoji { font-size: 56px; }
+  .win-text { font-size: 20px; font-weight: 800; color: #1e293b; }
+  .win-actions { display: flex; gap: 10px; }
+  .win-actions button {
+    flex: 1;
+    border: none;
+    border-radius: 14px;
+    padding: 12px 0;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .win-save-btn { background: var(--accent); color: #ffffff; }
+  .win-continue-btn { background: #f1f5f9; color: #64748b; }
+
+  /* landscape: switch A/B from top-bottom to left-right */
+  @media (orientation: landscape) {
+    .app {
+      flex-direction: row;
+    }
+    .divider {
+      width: 1px;
+      height: 100%;
+    }
+    .dice-btn {
+      transform: translate(-50%, -50%) translateX(-54px);
+    }
+    .dice-btn:active {
+      transform: translate(-50%, -50%) translateX(-54px) scale(0.9);
+    }
+    .diff-badge {
+      transform: translate(-50%, -50%) translateX(54px);
+    }
+    .crown {
+      top: -30px;
+    }
+  }
+
+  .color-picker {
+    position: absolute;
+    bottom: 14px;
+    right: 14px;
+    display: flex;
+    gap: 6px;
+  }
+  .swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.6);
+    cursor: pointer;
+    padding: 0;
+  }
+  .swatch.active { border-color: #ffffff; box-shadow: 0 0 0 2px rgba(255,255,255,0.4); }
+
+  .mode-bar {
+    position: fixed;
+    top: max(env(safe-area-inset-top, 12px), 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    gap: 6px;
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 4px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+  .mode-btn {
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .mode-btn.active {
+    background: var(--accent);
+    color: #ffffff;
+  }
+
+  .view { display: none; }
+  .view.visible { display: block; }
+
+  /* single counter view */
+  .single-wrap {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    padding-top: calc(env(safe-area-inset-top, 24px) + 70px);
+    padding-bottom: env(safe-area-inset-bottom, 24px);
+    background: #f8fafc;
+  }
+  .single-card {
+    width: 100%;
+    max-width: 380px;
+    background: #ffffff;
+    border-radius: 28px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    padding: 36px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+  .single-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+  }
+  .single-count {
+    font-size: 72px;
+    font-weight: 800;
+    color: #1e293b;
+    transition: color 0.2s ease;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .single-count.pos { color: #059669; }
+  .single-count.neg { color: #e11d48; }
+  .single-buttons {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+  }
+  .single-btn {
+    flex: 1;
+    border: none;
+    border-radius: 18px;
+    padding: 20px 0;
+    font-size: 22px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.08s ease, background 0.15s ease;
+  }
+  .single-btn:active { transform: scale(0.93); }
+  .single-minus { background: #ffe4e6; color: #e11d48; }
+  .single-minus:active { background: #fecdd3; }
+  .single-plus { background: #d1fae5; color: #059669; }
+  .single-plus:active { background: #a7f3d0; }
+  .single-reset { background: #f1f5f9; color: #64748b; flex: 0.7; font-size: 18px; }
+  .single-reset:active { background: #e2e8f0; }
+
+  .single-history-bar {
+    position: fixed;
+    top: calc(max(env(safe-area-inset-top, 12px), 12px) + 52px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+    max-width: 90vw;
+    overflow-x: auto;
+  }
+  .single-history-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    margin-right: 2px;
+    flex-shrink: 0;
+  }
+  .single-history-chip {
+    font-size: 13px;
+    font-weight: 800;
+    color: #1e293b;
+    background: #f1f5f9;
+    padding: 3px 9px;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .single-history-chip.latest {
+    background: var(--accent);
+    color: #ffffff;
+  }
+  .single-history-arrow {
+    color: #cbd5e1;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .steps {
+    display: flex;
+    gap: 8px;
+  }
+  .step-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.16);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .step-btn.active {
+    background: #ffffff;
+    color: var(--accent);
+  }
+
+  /* serve indicator */
+  .serve-dot {
+    display: inline-block;
+    font-size: 13px;
+    margin-left: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .serve-dot.show { opacity: 1; }
+
+  /* accent theme swatches (settings) */
+  .accent-swatches {
+    display: flex;
+    gap: 8px;
+  }
+  .accent-swatch {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+  }
+  .accent-swatch.active { border-color: #94a3b8; box-shadow: 0 0 0 2px rgba(0,0,0,0.08); }
+
+  .backup-textarea {
+    width: 100%;
+    min-height: 70px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    padding: 8px;
+    font-size: 11px;
+    font-family: monospace;
+    resize: none;
+  }
+  .backup-row-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  .backup-row-buttons button {
+    flex: 1;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 0;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    background: var(--accent-soft);
+    color: #475569;
+  }
+
+  /* ---------------- dark mode ---------------- */
+  body.dark .mode-bar,
+  body.dark .toolbar .tool-btn,
+  body.dark .rounds-bar,
+  body.dark .single-history-bar,
+  body.dark .swap-btn,
+  body.dark .dice-btn {
+    background: #1e293b;
+    color: #f1f5f9;
+  }
+  body.dark .mode-btn { color: #94a3b8; }
+  body.dark .mode-btn.active { color: #ffffff; }
+  body.dark .single-history-chip { background: #334155; color: #e2e8f0; }
+  body.dark .single-history-label { color: #64748b; }
+
+  body.dark .single-wrap { background: #0b1220; }
+  body.dark .single-card { background: #1e293b; }
+  body.dark .single-label { color: #64748b; }
+  body.dark .single-count { color: #f1f5f9; }
+  body.dark .single-reset { background: #334155; color: #cbd5e1; }
+
+  body.dark .modal-card { background: #1e293b; }
+  body.dark .modal-title { color: #f1f5f9; }
+  body.dark .modal-row-label { color: #cbd5e1; }
+  body.dark .modal-input { background: #0b1220; border-color: #334155; color: #f1f5f9; }
+  body.dark .modal-close-btn,
+  body.dark .backup-row-buttons button,
+  body.dark .timer-preset-btn,
+  body.dark .timer-reset-btn,
+  body.dark .win-continue-btn,
+  body.dark .dice-close-btn { background: #334155; color: #cbd5e1; }
+  body.dark .dice-title { color: #94a3b8; }
+  body.dark .dice-name { color: #f1f5f9; }
+  body.dark .timer-display { color: #f1f5f9; }
+  body.dark .win-text { color: #f1f5f9; }
+  body.dark .backup-textarea { background: #0b1220; border-color: #334155; color: #cbd5e1; }
+  body.dark .switch-slider { background: #334155; }
+</style>
+</head>
+<body>
+  <div class="mode-bar">
+    <button class="mode-btn active" id="modeAB">A / B</button>
+    <button class="mode-btn" id="modeSingle">단일 카운터</button>
+  </div>
+
+  <div class="view visible" id="view-ab">
+  <div class="toolbar">
+    <button class="tool-btn" id="undoBtn" title="되돌리기">↩️</button>
+    <button class="tool-btn" id="redoBtn" title="다시하기">↪️</button>
+    <button class="tool-btn" id="serveBtn" title="서브 전환">🏐</button>
+    <button class="tool-btn" id="timerBtn" title="타이머">⏱️</button>
+    <button class="tool-btn" id="settingsBtn" title="설정">⚙️</button>
+  </div>
+  <div class="rounds-bar" id="roundsBar">🏆 A 0 : 0 B</div>
+  <div class="app" id="app">
+    <div class="section" id="section-slot-0">
+      <div style="display:flex; align-items:center; gap:2px;">
+        <div class="label" contenteditable="true" spellcheck="false" data-name="A">A</div>
+        <span class="serve-dot" data-serve="A">🏐</span>
+      </div>
+      <div class="count" data-count="A"><span class="crown" data-crown="A">👑</span>0</div>
+      <div class="steps" data-steps="A"></div>
+      <div class="buttons">
+        <button class="action minus" data-target="A">−</button>
+        <button class="action reset" data-target="A" data-reset="1">↺</button>
+        <button class="action plus" data-target="A">+</button>
+      </div>
+      <div class="color-picker" data-picker="A"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section" id="section-slot-1">
+      <div style="display:flex; align-items:center; gap:2px;">
+        <div class="label" contenteditable="true" spellcheck="false" data-name="B">B</div>
+        <span class="serve-dot" data-serve="B">🏐</span>
+      </div>
+      <div class="count" data-count="B"><span class="crown" data-crown="B">👑</span>0</div>
+      <div class="steps" data-steps="B"></div>
+      <div class="buttons">
+        <button class="action minus" data-target="B">−</button>
+        <button class="action reset" data-target="B" data-reset="1">↺</button>
+        <button class="action plus" data-target="B">+</button>
+      </div>
+      <div class="color-picker" data-picker="B"></div>
+    </div>
+
+    <div class="swap-bar">
+      <button class="swap-btn" id="swapBtn">⇅</button>
+    </div>
+    <button class="dice-btn" id="diceBtn" title="선공 정하기">🎲</button>
+    <div class="diff-badge" id="diffBadge">동점</div>
+  </div>
+  </div>
+
+  <div class="dice-overlay" id="diceOverlay">
+    <div class="dice-card">
+      <div class="dice-title">선공 정하기 🎲</div>
+      <div class="dice-row">
+        <div class="dice-side">
+          <div class="dice-name" id="diceNameA">A</div>
+          <div class="dice-face" id="diceFaceA">🎲</div>
+        </div>
+        <div class="dice-vs">VS</div>
+        <div class="dice-side">
+          <div class="dice-name" id="diceNameB">B</div>
+          <div class="dice-face" id="diceFaceB">🎲</div>
+        </div>
+      </div>
+      <div class="dice-result" id="diceResult"></div>
+      <div class="dice-actions">
+        <button class="dice-roll-btn" id="diceRollBtn">굴리기</button>
+        <button class="dice-close-btn" id="diceCloseBtn">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="settingsOverlay">
+    <div class="modal-card">
+      <div class="modal-title">설정 ⚙️</div>
+
+      <div class="modal-row">
+        <div class="modal-row-label">목표 점수 알림</div>
+        <input class="modal-input" type="number" id="targetScoreInput" placeholder="없음" min="1">
+      </div>
+
+      <div class="modal-row">
+        <div class="modal-row-label">소리 피드백</div>
+        <label class="switch">
+          <input type="checkbox" id="soundToggle" checked>
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <div class="modal-row">
+        <div class="modal-row-label">진동 피드백</div>
+        <label class="switch">
+          <input type="checkbox" id="vibrateToggle" checked>
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <div class="modal-row">
+        <div class="modal-row-label">다크 모드</div>
+        <label class="switch">
+          <input type="checkbox" id="darkModeToggle">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+
+      <div class="modal-row">
+        <div class="modal-row-label">화면 꺼짐 방지</div>
+        <label class="switch">
+          <input type="checkbox" id="wakeLockToggle">
+          <span class="switch-slider"></span>
+        </label>
+      </div>
+      <div id="wakeLockStatus" style="font-size:12px; color:#94a3b8; text-align:right; margin-top:-10px;"></div>
+
+      <div class="modal-row">
+        <div class="modal-row-label">앱 강조색</div>
+        <div class="accent-swatches" id="accentSwatches"></div>
+      </div>
+
+      <div class="modal-row">
+        <div class="modal-row-label">라운드 기록 초기화</div>
+        <button id="resetRoundsBtn" style="width:auto; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:700; border:none; background:#fee2e2; color:#e11d48; cursor:pointer;">초기화</button>
+      </div>
+
+      <div style="border-top:1px solid #f1f5f9; margin-top:6px; padding-top:14px;">
+        <div class="modal-row-label" style="margin-bottom:8px;">설정 백업 / 복원</div>
+        <textarea class="backup-textarea" id="backupTextarea" placeholder="여기에 백업 코드가 표시되거나, 붙여넣어 복원할 수 있어요"></textarea>
+        <div class="backup-row-buttons" style="margin-top:8px;">
+          <button id="backupExportBtn">내보내기</button>
+          <button id="backupImportBtn">가져오기</button>
+        </div>
+      </div>
+
+      <button class="modal-close-btn" id="settingsCloseBtn">닫기</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="timerOverlay">
+    <div class="modal-card">
+      <div class="modal-title">타이머 ⏱️</div>
+      <div class="timer-display" id="timerDisplay">03:00</div>
+      <div class="timer-presets">
+        <button class="timer-preset-btn" data-secs="60">1분</button>
+        <button class="timer-preset-btn active" data-secs="180">3분</button>
+        <button class="timer-preset-btn" data-secs="300">5분</button>
+        <button class="timer-preset-btn" data-secs="600">10분</button>
+      </div>
+      <div class="timer-actions">
+        <button class="timer-start-btn" id="timerStartBtn">시작</button>
+        <button class="timer-reset-btn" id="timerResetBtn">초기화</button>
+      </div>
+      <button class="modal-close-btn" id="timerCloseBtn">닫기</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="winOverlay">
+    <div class="modal-card win-card">
+      <div class="win-emoji">🎉</div>
+      <div class="win-text" id="winText">A 승리!</div>
+      <div class="win-actions">
+        <button class="win-save-btn" id="winSaveBtn">라운드 기록 후 초기화</button>
+      </div>
+      <button class="win-continue-btn" id="winContinueBtn">계속 진행</button>
+    </div>
+  </div>
+
+  <div class="view" id="view-single">
+    <div class="single-history-bar" id="singleHistoryBar">
+      <span class="single-history-label">초기화 전 기록</span>
+    </div>
+    <div class="single-wrap">
+      <div class="single-card">
+        <div class="single-label">카운터</div>
+        <div class="single-count" id="singleCount">0</div>
+        <div class="single-buttons">
+          <button class="single-btn single-minus" id="singleMinus">−</button>
+          <button class="single-btn single-reset" id="singleReset">↺</button>
+          <button class="single-btn single-plus" id="singlePlus">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Service Worker: only works when hosted over http(s), safely skipped on file://
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => { /* ignore if unavailable */ });
+    });
+  }
+
+  const COLORS = ['blue', 'emerald', 'rose', 'amber', 'violet', 'slate'];
+  const STEPS = [1, 2, 3, 5];
+  const ACCENTS = [
+    { id: 'navy', color: '#0f172a' },
+    { id: 'indigo', color: '#4338ca' },
+    { id: 'teal', color: '#0d9488' },
+    { id: 'rose', color: '#be123c' },
+    { id: 'amber', color: '#b45309' }
+  ];
+
+  const STORE_KEY = 'abCounterData_v1';
+  function safeLoad() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+  function safeSave(data) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch (e) { /* 저장 불가 환경이면 조용히 무시 */ }
+  }
+  const saved = safeLoad();
+
+  const state = {
+    A: Object.assign({ count: 0, color: 'blue', name: 'A', step: 1 }, saved.A ? { color: saved.A.color, name: saved.A.name, step: saved.A.step } : {}),
+    B: Object.assign({ count: 0, color: 'rose', name: 'B', step: 1 }, saved.B ? { color: saved.B.color, name: saved.B.name, step: saved.B.step } : {}),
+    order: ['A', 'B'] // order[0] = top slot, order[1] = bottom slot
+  };
+
+  const sectionEls = [document.getElementById('section-slot-0'), document.getElementById('section-slot-1')];
+  let serveTeam = null;
+
+  function buildColorPicker(sectionEl, key) {
+    const picker = sectionEl.querySelector('.color-picker');
+    picker.innerHTML = '';
+    COLORS.forEach(c => {
+      const sw = document.createElement('button');
+      sw.className = 'swatch theme-' + c + (state[key].color === c ? ' active' : '');
+      sw.addEventListener('click', (e) => {
+        e.stopPropagation();
+        state[key].color = c;
+        render();
+        saveAll();
+      });
+      picker.appendChild(sw);
+    });
+  }
+
+  function buildSteps(sectionEl, key) {
+    const wrap = sectionEl.querySelector('.steps');
+    wrap.innerHTML = '';
+    STEPS.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'step-btn' + (state[key].step === s ? ' active' : '');
+      b.textContent = '+' + s;
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        state[key].step = s;
+        render();
+        saveAll();
+      });
+      wrap.appendChild(b);
+    });
+  }
+
+  function render() {
+    const leader = state.A.count === state.B.count ? null : (state.A.count > state.B.count ? 'A' : 'B');
+    const diff = Math.abs(state.A.count - state.B.count);
+    const diffBadge = document.getElementById('diffBadge');
+    if (diff === 0) {
+      diffBadge.textContent = '동점';
+    } else {
+      const leaderName = state[leader].name;
+      diffBadge.textContent = `${leaderName} +${diff}`;
+    }
+
+    state.order.forEach((key, slotIndex) => {
+      const el = sectionEls[slotIndex];
+      el.className = 'section theme-' + state[key].color;
+
+      const label = el.querySelector('.label');
+      if (document.activeElement !== label) label.textContent = state[key].name;
+
+      const countEl = el.querySelector('.count');
+      countEl.childNodes[countEl.childNodes.length - 1].textContent = state[key].count;
+
+      const crown = el.querySelector('.crown');
+      crown.classList.toggle('show', leader === key);
+
+      el.querySelectorAll('button.action').forEach(btn => btn.setAttribute('data-target', key));
+      label.setAttribute('data-name', key);
+      crown.setAttribute('data-crown', key);
+
+      const serveDot = el.querySelector('.serve-dot');
+      serveDot.setAttribute('data-serve', key);
+      serveDot.classList.toggle('show', serveTeam === key);
+
+      buildColorPicker(el, key);
+      buildSteps(el, key);
+    });
+  }
+
+  // name editing (reads current key from data-name, since it can change after a swap)
+  document.querySelectorAll('.label').forEach(label => {
+    label.addEventListener('input', () => {
+      const key = label.getAttribute('data-name');
+      state[key].name = label.textContent.trim() || key;
+    });
+    label.addEventListener('blur', () => { render(); saveAll(); });
+  });
+
+  // +/-/reset with long-press auto-repeat (reads current key from data-target, since it can change after a swap)
+  document.querySelectorAll('button.action').forEach(btn => {
+    function applyChange() {
+      const key = btn.getAttribute('data-target');
+      const step = state[key].step;
+      pushUndo();
+      if (btn.classList.contains('plus')) state[key].count += step;
+      else if (btn.classList.contains('minus')) state[key].count -= step;
+      else if (btn.hasAttribute('data-reset')) state[key].count = 0;
+      feedback('tap');
+      render();
+      checkWin();
+    }
+
+    let holdTimeout = null;
+    let holdInterval = null;
+
+    function startHold() {
+      holdTimeout = setTimeout(() => {
+        holdInterval = setInterval(applyChange, 90);
+      }, 450);
+    }
+    function stopHold() {
+      clearTimeout(holdTimeout);
+      clearInterval(holdInterval);
+      holdTimeout = null;
+      holdInterval = null;
+    }
+
+    btn.addEventListener('click', applyChange);
+    btn.addEventListener('pointerdown', startHold);
+    btn.addEventListener('pointerup', stopHold);
+    btn.addEventListener('pointerleave', stopHold);
+    btn.addEventListener('pointercancel', stopHold);
+  });
+
+  document.getElementById('swapBtn').addEventListener('click', () => {
+    state.order.reverse();
+    render();
+  });
+
+  document.getElementById('serveBtn').addEventListener('click', () => {
+    if (serveTeam === null) serveTeam = 'A';
+    else serveTeam = serveTeam === 'A' ? 'B' : null;
+    render();
+  });
+
+  // swap icon direction follows screen orientation
+  const swapBtnEl = document.getElementById('swapBtn');
+  const orientationQuery = window.matchMedia('(orientation: landscape)');
+  function updateSwapIcon() {
+    swapBtnEl.textContent = orientationQuery.matches ? '⇄' : '⇅';
+  }
+  if (orientationQuery.addEventListener) {
+    orientationQuery.addEventListener('change', updateSwapIcon);
+  } else if (orientationQuery.addListener) {
+    // fallback for older iOS Safari versions
+    orientationQuery.addListener(updateSwapIcon);
+  }
+  updateSwapIcon();
+
+  render();
+
+  // ---- single counter view ----
+  let singleCount = 0;
+  const singleCountEl = document.getElementById('singleCount');
+  const singleHistoryBar = document.getElementById('singleHistoryBar');
+  const singleHistory = [];
+
+  function renderSingle() {
+    singleCountEl.textContent = singleCount;
+    singleCountEl.classList.remove('pos', 'neg');
+    if (singleCount > 0) singleCountEl.classList.add('pos');
+    if (singleCount < 0) singleCountEl.classList.add('neg');
+  }
+
+  function recordSingleHistory() {
+    singleHistory.unshift(singleCount);
+    if (singleHistory.length > 5) singleHistory.pop();
+    renderSingleHistory();
+  }
+
+  function renderSingleHistory() {
+    singleHistoryBar.innerHTML = '<span class="single-history-label">초기화 전 기록</span>';
+    if (singleHistory.length === 0) {
+      const empty = document.createElement('span');
+      empty.className = 'single-history-chip';
+      empty.textContent = '기록 없음';
+      empty.style.color = '#94a3b8';
+      empty.style.background = '#f8fafc';
+      singleHistoryBar.appendChild(empty);
+      return;
+    }
+    singleHistory.forEach((val, i) => {
+      if (i > 0) {
+        const arrow = document.createElement('span');
+        arrow.className = 'single-history-arrow';
+        arrow.textContent = '←';
+        singleHistoryBar.appendChild(arrow);
+      }
+      const chip = document.createElement('span');
+      chip.className = 'single-history-chip' + (i === 0 ? ' latest' : '');
+      chip.textContent = val;
+      singleHistoryBar.appendChild(chip);
+    });
+  }
+
+  document.getElementById('singlePlus').addEventListener('click', () => { singleCount++; renderSingle(); });
+  document.getElementById('singleMinus').addEventListener('click', () => { singleCount--; renderSingle(); });
+  document.getElementById('singleReset').addEventListener('click', () => {
+    if (singleCount !== 0) {
+      singleHistory.unshift(singleCount);
+      if (singleHistory.length > 10) singleHistory.pop();
+      renderSingleHistory();
+    }
+    singleCount = 0;
+    renderSingle();
+  });
+
+  renderSingleHistory();
+
+  // ---- mode switching ----
+  const modeAB = document.getElementById('modeAB');
+  const modeSingle = document.getElementById('modeSingle');
+  const viewAB = document.getElementById('view-ab');
+  const viewSingle = document.getElementById('view-single');
+
+  modeAB.addEventListener('click', () => {
+    modeAB.classList.add('active');
+    modeSingle.classList.remove('active');
+    viewAB.classList.add('visible');
+    viewSingle.classList.remove('visible');
+  });
+
+  modeSingle.addEventListener('click', () => {
+    modeSingle.classList.add('active');
+    modeAB.classList.remove('active');
+    viewSingle.classList.add('visible');
+    viewAB.classList.remove('visible');
+  });
+
+  // ---- dice: decide who goes first ----
+  const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+  const diceOverlay = document.getElementById('diceOverlay');
+  const diceFaceA = document.getElementById('diceFaceA');
+  const diceFaceB = document.getElementById('diceFaceB');
+  const diceNameA = document.getElementById('diceNameA');
+  const diceNameB = document.getElementById('diceNameB');
+  const diceResult = document.getElementById('diceResult');
+  const diceRollBtn = document.getElementById('diceRollBtn');
+
+  function openDice() {
+    diceNameA.textContent = state.A.name;
+    diceNameB.textContent = state.B.name;
+    diceFaceA.textContent = '🎲';
+    diceFaceB.textContent = '🎲';
+    diceResult.textContent = '버튼을 눌러 굴려보세요';
+    diceOverlay.classList.add('show');
+  }
+
+  function rollDice() {
+    diceRollBtn.disabled = true;
+    let ticks = 0;
+    const spin = setInterval(() => {
+      diceFaceA.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
+      diceFaceB.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
+      ticks++;
+      if (ticks > 12) {
+        clearInterval(spin);
+        const rollA = Math.floor(Math.random() * 6) + 1;
+        const rollB = Math.floor(Math.random() * 6) + 1;
+        diceFaceA.textContent = DICE_FACES[rollA - 1];
+        diceFaceB.textContent = DICE_FACES[rollB - 1];
+        if (rollA === rollB) {
+          diceResult.textContent = `${rollA} : ${rollB} — 동점! 다시 굴려주세요`;
+        } else {
+          const winnerKey = rollA > rollB ? 'A' : 'B';
+          diceResult.textContent = `${state[winnerKey].name} 선공! (${rollA} : ${rollB})`;
+        }
+        diceRollBtn.disabled = false;
+      }
+    }, 80);
+  }
+
+  document.getElementById('diceBtn').addEventListener('click', openDice);
+  document.getElementById('diceCloseBtn').addEventListener('click', () => diceOverlay.classList.remove('show'));
+  diceRollBtn.addEventListener('click', rollDice);
+
+  // ---- settings state ----
+  const settings = Object.assign(
+    { targetScore: null, sound: true, vibrate: true, dark: false, accent: 'navy' },
+    saved.settings || {}
+  );
+  const roundWins = Object.assign({ A: 0, B: 0 }, saved.roundWins || {});
+  let winAcknowledged = false;
+  const roundsBar = document.getElementById('roundsBar');
+
+  function updateRoundsBar() {
+    roundsBar.textContent = `🏆 ${state.A.name} ${roundWins.A} : ${roundWins.B} ${state.B.name}`;
+  }
+
+  function saveAll() {
+    safeSave({
+      A: { color: state.A.color, name: state.A.name, step: state.A.step },
+      B: { color: state.B.color, name: state.B.name, step: state.B.step },
+      settings: settings,
+      roundWins: roundWins
+    });
+  }
+
+  function applyAccent(id) {
+    const found = ACCENTS.find(a => a.id === id) || ACCENTS[0];
+    document.documentElement.style.setProperty('--accent', found.color);
+    settings.accent = found.id;
+  }
+  function applyDarkMode(on) {
+    document.body.classList.toggle('dark', on);
+    settings.dark = on;
+  }
+
+  // apply loaded settings to UI + document
+  applyAccent(settings.accent);
+  applyDarkMode(settings.dark);
+
+  // ---- sound + vibration feedback ----
+  let audioCtx = null;
+  function beep(freq = 880, dur = 0.08) {
+    if (!settings.sound) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + dur);
+    } catch (e) { /* audio not available */ }
+  }
+  function feedback(kind) {
+    if (settings.vibrate && navigator.vibrate) {
+      navigator.vibrate(kind === 'win' ? [60, 40, 60] : 25);
+    }
+    beep(kind === 'win' ? 660 : 880, kind === 'win' ? 0.15 : 0.07);
+  }
+
+  // ---- undo / redo stack ----
+  const undoStack = [];
+  const redoStack = [];
+  const undoBtn = document.getElementById('undoBtn');
+  const redoBtn = document.getElementById('redoBtn');
+  function pushUndo() {
+    undoStack.push({ A: state.A.count, B: state.B.count });
+    if (undoStack.length > 30) undoStack.shift();
+    redoStack.length = 0;
+  }
+  undoBtn.addEventListener('click', () => {
+    const prev = undoStack.pop();
+    if (!prev) return;
+    redoStack.push({ A: state.A.count, B: state.B.count });
+    state.A.count = prev.A;
+    state.B.count = prev.B;
+    render();
+  });
+  redoBtn.addEventListener('click', () => {
+    const next = redoStack.pop();
+    if (!next) return;
+    undoStack.push({ A: state.A.count, B: state.B.count });
+    state.A.count = next.A;
+    state.B.count = next.B;
+    render();
+  });
+
+  // ---- win check (target score) ----
+  function checkWin() {
+    const target = settings.targetScore;
+    if (!target || winAcknowledged) return;
+    if (state.A.count >= target || state.B.count >= target) {
+      const winnerKey = state.A.count >= state.B.count ? 'A' : 'B';
+      document.getElementById('winText').textContent = `${state[winnerKey].name} 승리! 🎉`;
+      document.getElementById('winOverlay').classList.add('show');
+      winAcknowledged = true;
+      feedback('win');
+    }
+  }
+
+  document.getElementById('winContinueBtn').addEventListener('click', () => {
+    document.getElementById('winOverlay').classList.remove('show');
+  });
+
+  document.getElementById('winSaveBtn').addEventListener('click', () => {
+    const winnerKey = state.A.count >= state.B.count ? 'A' : 'B';
+    roundWins[winnerKey]++;
+    updateRoundsBar();
+    state.A.count = 0;
+    state.B.count = 0;
+    winAcknowledged = false;
+    document.getElementById('winOverlay').classList.remove('show');
+    render();
+    saveAll();
+  });
+
+  document.getElementById('resetRoundsBtn').addEventListener('click', () => {
+    roundWins.A = 0;
+    roundWins.B = 0;
+    updateRoundsBar();
+    saveAll();
+  });
+
+  updateRoundsBar();
+
+  // ---- settings modal ----
+  const settingsOverlay = document.getElementById('settingsOverlay');
+  document.getElementById('settingsBtn').addEventListener('click', () => settingsOverlay.classList.add('show'));
+  document.getElementById('settingsCloseBtn').addEventListener('click', () => settingsOverlay.classList.remove('show'));
+
+  const targetScoreInput = document.getElementById('targetScoreInput');
+  const soundToggle = document.getElementById('soundToggle');
+  const vibrateToggle = document.getElementById('vibrateToggle');
+  const darkModeToggle = document.getElementById('darkModeToggle');
+
+  // reflect loaded settings in the UI
+  if (settings.targetScore) targetScoreInput.value = settings.targetScore;
+  soundToggle.checked = settings.sound;
+  vibrateToggle.checked = settings.vibrate;
+  darkModeToggle.checked = settings.dark;
+
+  targetScoreInput.addEventListener('input', (e) => {
+    const v = parseInt(e.target.value, 10);
+    settings.targetScore = (v && v > 0) ? v : null;
+    winAcknowledged = false;
+    saveAll();
+  });
+  soundToggle.addEventListener('change', (e) => { settings.sound = e.target.checked; saveAll(); });
+  vibrateToggle.addEventListener('change', (e) => { settings.vibrate = e.target.checked; saveAll(); });
+  darkModeToggle.addEventListener('change', (e) => { applyDarkMode(e.target.checked); saveAll(); });
+
+  // accent theme swatches
+  const accentSwatchesEl = document.getElementById('accentSwatches');
+  ACCENTS.forEach(a => {
+    const sw = document.createElement('button');
+    sw.className = 'accent-swatch' + (settings.accent === a.id ? ' active' : '');
+    sw.style.background = a.color;
+    sw.addEventListener('click', () => {
+      applyAccent(a.id);
+      accentSwatchesEl.querySelectorAll('.accent-swatch').forEach(el => el.classList.remove('active'));
+      sw.classList.add('active');
+      saveAll();
+    });
+    accentSwatchesEl.appendChild(sw);
+  });
+
+  // wake lock (screen stays on) — only fully works over https, gracefully explains otherwise
+  let wakeLock = null;
+  const wakeLockToggle = document.getElementById('wakeLockToggle');
+  const wakeLockStatus = document.getElementById('wakeLockStatus');
+  async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) {
+      wakeLockToggle.checked = false;
+      wakeLockStatus.textContent = '이 브라우저/화면에서는 지원되지 않아요.';
+      return;
+    }
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLockStatus.textContent = '켜짐 ✅';
+      wakeLock.addEventListener('release', () => { wakeLockStatus.textContent = ''; });
+    } catch (e) {
+      wakeLockToggle.checked = false;
+      wakeLockStatus.textContent = 'https로 접속했을 때만 사용할 수 있어요 (file://에서는 제한됨).';
+    }
+  }
+  function releaseWakeLock() {
+    if (wakeLock) { wakeLock.release(); wakeLock = null; }
+    wakeLockStatus.textContent = '';
+  }
+  wakeLockToggle.addEventListener('change', (e) => {
+    if (e.target.checked) requestWakeLock();
+    else releaseWakeLock();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && wakeLockToggle.checked && !wakeLock) requestWakeLock();
+  });
+
+  // backup / restore
+  const backupTextarea = document.getElementById('backupTextarea');
+  document.getElementById('backupExportBtn').addEventListener('click', () => {
+    const payload = {
+      A: { color: state.A.color, name: state.A.name, step: state.A.step },
+      B: { color: state.B.color, name: state.B.name, step: state.B.step },
+      settings: settings,
+      roundWins: roundWins
+    };
+    backupTextarea.value = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    backupTextarea.select();
+  });
+  document.getElementById('backupImportBtn').addEventListener('click', () => {
+    try {
+      const decoded = decodeURIComponent(escape(atob(backupTextarea.value.trim())));
+      const data = JSON.parse(decoded);
+      if (data.A) Object.assign(state.A, { color: data.A.color, name: data.A.name, step: data.A.step });
+      if (data.B) Object.assign(state.B, { color: data.B.color, name: data.B.name, step: data.B.step });
+      if (data.settings) Object.assign(settings, data.settings);
+      if (data.roundWins) Object.assign(roundWins, data.roundWins);
+      targetScoreInput.value = settings.targetScore || '';
+      soundToggle.checked = settings.sound;
+      vibrateToggle.checked = settings.vibrate;
+      darkModeToggle.checked = settings.dark;
+      applyDarkMode(settings.dark);
+      applyAccent(settings.accent);
+      accentSwatchesEl.querySelectorAll('.accent-swatch').forEach((el, i) => el.classList.toggle('active', ACCENTS[i].id === settings.accent));
+      updateRoundsBar();
+      render();
+      saveAll();
+      backupTextarea.value = '복원 완료 ✅';
+    } catch (e) {
+      backupTextarea.value = '코드를 읽을 수 없어요. 내보내기한 코드를 그대로 붙여넣어주세요.';
+    }
+  });
+
+  // ---- timer ----
+  const timerOverlay = document.getElementById('timerOverlay');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const timerStartBtn = document.getElementById('timerStartBtn');
+  let timerTotal = 180;
+  let timerRemaining = 180;
+  let timerInterval = null;
+  let timerRunning = false;
+
+  function formatTime(secs) {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+  function renderTimer() {
+    timerDisplay.textContent = formatTime(timerRemaining);
+    timerDisplay.classList.toggle('warn', timerRemaining <= 10);
+  }
+  document.getElementById('timerBtn').addEventListener('click', () => timerOverlay.classList.add('show'));
+  document.getElementById('timerCloseBtn').addEventListener('click', () => timerOverlay.classList.remove('show'));
+
+  document.querySelectorAll('.timer-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (timerRunning) return;
+      document.querySelectorAll('.timer-preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      timerTotal = parseInt(btn.getAttribute('data-secs'), 10);
+      timerRemaining = timerTotal;
+      renderTimer();
+    });
+  });
+
+  timerStartBtn.addEventListener('click', () => {
+    if (timerRunning) {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      timerStartBtn.textContent = '시작';
+      return;
+    }
+    timerRunning = true;
+    timerStartBtn.textContent = '일시정지';
+    timerInterval = setInterval(() => {
+      timerRemaining--;
+      renderTimer();
+      if (timerRemaining <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        timerStartBtn.textContent = '시작';
+        feedback('win');
+      }
+    }, 1000);
+  });
+
+  document.getElementById('timerResetBtn').addEventListener('click', () => {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerStartBtn.textContent = '시작';
+    timerRemaining = timerTotal;
+    renderTimer();
+  });
+
+  renderTimer();
+</script>
+</body>
+</html>
