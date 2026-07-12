@@ -1863,8 +1863,10 @@
   document.getElementById('exitConfirmBtn').addEventListener('click', () => {
     allowExit = true;
     exitConfirmOverlay.classList.remove('show');
-    history.back();
-    // fallback for contexts where history.back() has nowhere further to go
+    // go back past both our guard entry AND the original entry in one shot,
+    // so the OS/browser sees no further history and actually closes the app
+    history.go(-2);
+    // fallback for contexts where history navigation has nowhere further to go
     setTimeout(() => { window.close(); }, 300);
   });
 </script>
