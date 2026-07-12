@@ -284,20 +284,27 @@
 
   .toolbar {
     position: fixed;
-    top: calc(max(env(safe-area-inset-top, 12px), 12px) + 52px);
-    right: 14px;
-    z-index: 20;
+    top: calc(max(env(safe-area-inset-top, 12px), 12px) + 60px);
+    right: 10px;
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 20;
+  }
+  @media (orientation: landscape) {
+    .toolbar {
+      top: max(env(safe-area-inset-top, 12px), 12px);
+      flex-direction: row;
+    }
   }
   .tool-btn {
-    width: 38px;
-    height: 38px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     border: none;
     background: rgba(255,255,255,0.9);
     box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-    font-size: 16px;
+    font-size: 13px;
     cursor: pointer;
     color: var(--accent);
     transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -593,8 +600,11 @@
     transform: translateX(-50%);
     z-index: 20;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: 8px;
+    max-width: 94vw;
   }
   .mode-bar {
     display: flex;
@@ -871,8 +881,7 @@
     <button class="timer-badge" id="timerBadge"></button>
   </div>
 
-  <div class="view visible" id="view-ab">
-  <div class="toolbar">
+  <div class="toolbar" id="toolbar">
     <button class="tool-btn" id="undoBtn" title="되돌리기">↩️</button>
     <button class="tool-btn" id="redoBtn" title="다시하기">↪️</button>
     <button class="tool-btn" id="serveBtn" title="서브 전환">🏐</button>
@@ -881,6 +890,8 @@
     <button class="tool-btn" id="timelineBtn" title="경기 타임라인">📜</button>
     <button class="tool-btn" id="settingsBtn" title="설정">⚙️</button>
   </div>
+
+  <div class="view visible" id="view-ab">
   <div class="rounds-bar" id="roundsBar">🏆 A 0 : 0 B</div>
 
   <div class="timeline-panel" id="timelinePanel">
@@ -1464,11 +1475,15 @@
   const viewAB = document.getElementById('view-ab');
   const viewSingle = document.getElementById('view-single');
 
+  const toolbarEl = document.getElementById('toolbar');
+  const AB_ONLY_TOOLS = ['undoBtn', 'redoBtn', 'serveBtn', 'shareBtn', 'timelineBtn'];
+
   modeAB.addEventListener('click', () => {
     modeAB.classList.add('active');
     modeSingle.classList.remove('active');
     viewAB.classList.add('visible');
     viewSingle.classList.remove('visible');
+    AB_ONLY_TOOLS.forEach(id => { document.getElementById(id).style.display = ''; });
   });
 
   modeSingle.addEventListener('click', () => {
@@ -1476,6 +1491,7 @@
     modeAB.classList.remove('active');
     viewSingle.classList.add('visible');
     viewAB.classList.remove('visible');
+    AB_ONLY_TOOLS.forEach(id => { document.getElementById(id).style.display = 'none'; });
   });
 
   // ---- dice: decide who goes first ----
