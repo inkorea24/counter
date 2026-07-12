@@ -318,10 +318,6 @@
   .tool-btn.disabled { opacity: 0.35; pointer-events: none; }
 
   .rounds-bar {
-    position: fixed;
-    top: calc(max(env(safe-area-inset-top, 12px), 12px) + 52px);
-    left: 14px;
-    z-index: 15;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -867,6 +863,10 @@
 </head>
 <body>
   <div class="top-bar-wrap">
+    <div class="rounds-bar" id="roundsBar">
+      <span class="rounds-bar-text" id="roundsBarText">🏆 A 0 : 0 B</span>
+      <button class="game-start-btn" id="gameStartBtn">▶ 게임 시작</button>
+    </div>
     <div class="mode-bar">
       <button class="mode-btn active" id="modeAB">A / B</button>
       <button class="mode-btn" id="modeSingle">카운터</button>
@@ -885,11 +885,6 @@
   </div>
 
   <div class="view visible" id="view-ab">
-  <div class="rounds-bar" id="roundsBar">
-    <span class="rounds-bar-text" id="roundsBarText">🏆 A 0 : 0 B</span>
-    <button class="game-start-btn" id="gameStartBtn">▶ 게임 시작</button>
-  </div>
-
   <div class="modal-overlay" id="timelinePanel">
     <div class="modal-card">
       <div class="modal-title">📜 경기 타임라인</div>
@@ -1473,7 +1468,7 @@
   const viewSingle = document.getElementById('view-single');
 
   const toolbarEl = document.getElementById('toolbar');
-  const AB_ONLY_TOOLS = ['undoBtn', 'redoBtn', 'serveBtn', 'shareBtn', 'timelineBtn'];
+  const AB_ONLY_TOOLS = ['undoBtn', 'redoBtn', 'serveBtn', 'shareBtn', 'timelineBtn', 'roundsBar'];
 
   modeAB.addEventListener('click', () => {
     modeAB.classList.add('active');
