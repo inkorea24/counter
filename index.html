@@ -145,8 +145,8 @@
     z-index: 10;
   }
   .swap-btn {
-    width: 46px;
-    height: 46px;
+    width: clamp(46px, 8vw, 62px);
+    height: clamp(46px, 8vw, 62px);
     border-radius: 50%;
     background: #ffffff;
     border: none;
@@ -154,7 +154,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: clamp(20px, 3.5vw, 27px);
     cursor: pointer;
     color: var(--accent);
     transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -182,13 +182,13 @@
     left: 50%;
     transform: translate(-50%, -50%) translateX(-54px);
     z-index: 10;
-    width: 40px;
-    height: 40px;
+    width: clamp(40px, 7vw, 55px);
+    height: clamp(40px, 7vw, 55px);
     border-radius: 50%;
     background: #ffffff;
     border: none;
     box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-    font-size: 18px;
+    font-size: clamp(18px, 3.2vw, 25px);
     cursor: pointer;
     color: var(--accent);
     transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -298,13 +298,13 @@
     }
   }
   .tool-btn {
-    width: 30px;
-    height: 30px;
+    width: clamp(30px, 6vw, 44px);
+    height: clamp(30px, 6vw, 44px);
     border-radius: 50%;
     border: none;
     background: rgba(255,255,255,0.9);
     box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-    font-size: 13px;
+    font-size: clamp(13px, 2.6vw, 19px);
     cursor: pointer;
     color: var(--accent);
     transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -555,8 +555,8 @@
     gap: 6px;
   }
   .swatch {
-    width: 20px;
-    height: 20px;
+    width: clamp(20px, 4vw, 30px);
+    height: clamp(20px, 4vw, 30px);
     border-radius: 50%;
     border: 2px solid rgba(255,255,255,0.6);
     cursor: pointer;
@@ -589,9 +589,9 @@
     border: none;
     background: var(--accent);
     color: #ffffff;
-    font-size: 13px;
+    font-size: clamp(13px, 2.4vw, 17px);
     font-weight: 800;
-    padding: 10px 14px;
+    padding: clamp(8px, 1.8vw, 12px) clamp(12px, 2.6vw, 18px);
     border-radius: 999px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.25);
     cursor: pointer;
@@ -606,9 +606,9 @@
     border: none;
     background: transparent;
     color: #64748b;
-    font-size: 13px;
+    font-size: clamp(13px, 2.4vw, 17px);
     font-weight: 700;
-    padding: 8px 16px;
+    padding: clamp(8px, 1.6vw, 12px) clamp(14px, 3.2vw, 26px);
     border-radius: 999px;
     cursor: pointer;
   }
@@ -731,13 +731,13 @@
     gap: 8px;
   }
   .step-btn {
-    width: 34px;
-    height: 34px;
+    width: clamp(34px, 6.5vw, 46px);
+    height: clamp(34px, 6.5vw, 46px);
     border-radius: 50%;
     border: none;
     background: rgba(255,255,255,0.16);
     color: #ffffff;
-    font-size: 14px;
+    font-size: clamp(14px, 2.6vw, 17px);
     font-weight: 700;
     cursor: pointer;
   }
@@ -760,14 +760,6 @@
   .accent-swatches {
     display: flex;
     gap: 8px;
-  }
-  .accent-swatch {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    cursor: pointer;
-    padding: 0;
   }
   .accent-swatch.active { border-color: #94a3b8; box-shadow: 0 0 0 2px rgba(0,0,0,0.08); }
 
@@ -840,40 +832,14 @@
   body.dark .backup-textarea { background: #0b1220; border-color: #334155; color: #cbd5e1; }
   body.dark .switch-slider { background: #334155; }
 
-  /* larger screens (tablets, unfolded foldables): scale up small tap targets */
-  @media (min-width: 600px) {
-    .tool-btn {
-      width: 46px;
-      height: 46px;
-      font-size: 20px;
-    }
-    .swap-btn {
-      width: 60px;
-      height: 60px;
-      font-size: 26px;
-    }
-    .dice-btn {
-      width: 54px;
-      height: 54px;
-      font-size: 24px;
-    }
-    .mode-btn {
-      padding: 12px 26px;
-      font-size: 17px;
-    }
-    .step-btn {
-      width: 44px;
-      height: 44px;
-      font-size: 16px;
-    }
-    .swatch, .accent-swatch {
-      width: 34px;
-      height: 34px;
-    }
-    .timer-badge {
-      font-size: 16px;
-      padding: 12px 18px;
-    }
+  /* accent swatches in settings scale slightly for larger screens too */
+  .accent-swatch {
+    width: clamp(26px, 4vw, 32px);
+    height: clamp(26px, 4vw, 32px);
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
   }
 </style>
 </head>
