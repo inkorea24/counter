@@ -149,7 +149,7 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) translateY(-54px);
+    transform: translate(-50%, -50%) translateX(-54px);
     z-index: 10;
     width: 40px;
     height: 40px;
@@ -161,7 +161,7 @@
     cursor: pointer;
     color: var(--accent);
   }
-  .dice-btn:active { transform: translate(-50%, -50%) translateY(-54px) scale(0.9); }
+  .dice-btn:active { transform: translate(-50%, -50%) translateX(-54px) scale(0.9); }
 
   .dice-overlay {
     position: fixed;
@@ -245,8 +245,7 @@
   .toolbar {
     position: fixed;
     top: calc(max(env(safe-area-inset-top, 12px), 12px) + 52px);
-    left: 50%;
-    transform: translateX(-50%);
+    right: 14px;
     z-index: 20;
     display: flex;
     gap: 8px;
@@ -267,9 +266,8 @@
 
   .rounds-bar {
     position: fixed;
-    top: calc(max(env(safe-area-inset-top, 12px), 12px) + 100px);
-    left: 50%;
-    transform: translateX(-50%);
+    top: calc(max(env(safe-area-inset-top, 12px), 12px) + 52px);
+    left: 14px;
     z-index: 15;
     background: rgba(255,255,255,0.95);
     border-radius: 999px;
