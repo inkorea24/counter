@@ -165,13 +165,18 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) translateY(54px);
+    transform: translate(-50%, -50%) translateX(54px);
     z-index: 9;
-    font-size: 12px;
-    font-weight: 700;
-    color: rgba(255,255,255,0.55);
-    background: rgba(0,0,0,0.25);
-    padding: 3px 10px;
+    font-size: clamp(13px, 2.6vw, 17px);
+    font-weight: 800;
+    color: var(--accent);
+    background: #ffffff;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    padding: 0 clamp(14px, 3vw, 20px);
+    height: clamp(40px, 7vw, 55px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 999px;
     white-space: nowrap;
   }
@@ -538,9 +543,6 @@
     }
     .dice-btn:active {
       transform: translate(-50%, -50%) translateX(-54px) scale(0.9);
-    }
-    .diff-badge {
-      transform: translate(-50%, -50%) translateX(54px);
     }
     .crown {
       top: -30px;
@@ -1078,8 +1080,10 @@
   <div class="modal-overlay" id="timerDoneOverlay">
     <div class="modal-card win-card">
       <div class="win-emoji">⏰</div>
-      <div class="win-text">시간 종료!</div>
-      <button class="win-continue-btn" id="timerDoneCloseBtn">확인</button>
+      <div class="win-text">시간 종료! 경기 종료</div>
+      <div class="win-text" id="timerDoneResult" style="font-size:20px;"></div>
+      <button class="dice-roll-btn" id="timerDoneShareBtn" style="width:100%;">📤 공유하기</button>
+      <button class="win-continue-btn" id="timerDoneCloseBtn">닫기</button>
     </div>
   </div>
 
@@ -1941,6 +1945,16 @@
         timerTotal = 0;
         renderTimer();
         feedback('win');
+
+        const a = state.A.count, b = state.B.count;
+        const resultEl = document.getElementById('timerDoneResult');
+        if (a === b) {
+          resultEl.textContent = `${a} : ${b} — 동점!`;
+        } else {
+          const winnerKey = a > b ? 'A' : 'B';
+          resultEl.textContent = `${state[winnerKey].name} 승리! (${a} : ${b})`;
+        }
+        logTimeline(`⏰ 타이머 종료 — 최종 스코어 ${a}:${b}`);
         timerDoneOverlay.classList.add('show');
       }
     }, 1000);
@@ -1960,6 +1974,7 @@
   timerStartBtn.addEventListener('click', toggleTimer);
   timerBadge.addEventListener('click', toggleTimer);
   document.getElementById('timerDoneCloseBtn').addEventListener('click', () => timerDoneOverlay.classList.remove('show'));
+  document.getElementById('timerDoneShareBtn').addEventListener('click', () => openShare());
 
   document.getElementById('timerResetBtn').addEventListener('click', () => {
     clearInterval(timerInterval);
