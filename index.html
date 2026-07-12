@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>A/B 카운터</title>
+<title>카운터 프로</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="A/B 카운터">
+<meta name="apple-mobile-web-app-title" content="카운터 프로">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f172a">
 <link rel="manifest" href="manifest.json">
@@ -866,7 +866,7 @@
   <div class="top-bar-wrap">
     <div class="mode-bar">
       <button class="mode-btn active" id="modeAB">A / B</button>
-      <button class="mode-btn" id="modeSingle">단일 카운터</button>
+      <button class="mode-btn" id="modeSingle">카운터</button>
     </div>
     <button class="timer-badge" id="timerBadge"></button>
   </div>
@@ -2025,7 +2025,7 @@
 
     ctx.font = `${Math.round(H * 0.045)}px sans-serif`;
     ctx.fillStyle = 'rgba(255,255,255,0.65)';
-    ctx.fillText('A/B 카운터', half, H * 0.94);
+    ctx.fillText('카운터 프로', half, H * 0.94);
   }
 
   function drawMatchSummaryCard(canvas) {
@@ -2089,7 +2089,7 @@
 
     ctx.font = `${Math.round(H * 0.04)}px sans-serif`;
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.fillText('A/B 카운터', W / 2, H * 0.96);
+    ctx.fillText('카운터 프로', W / 2, H * 0.96);
   }
 
   function openShare(drawFn) {
