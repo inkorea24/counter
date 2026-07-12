@@ -145,8 +145,8 @@
     z-index: 10;
   }
   .swap-btn {
-    width: clamp(46px, 8vw, 62px);
-    height: clamp(46px, 8vw, 62px);
+    width: clamp(46px, 8vmin, 62px);
+    height: clamp(46px, 8vmin, 62px);
     border-radius: 50%;
     background: #ffffff;
     border: none;
@@ -154,7 +154,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(20px, 3.5vw, 27px);
+    font-size: clamp(20px, 3.5vmin, 27px);
     cursor: pointer;
     color: var(--accent);
     transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -167,13 +167,13 @@
     left: 50%;
     transform: translate(-50%, -50%) translateX(54px);
     z-index: 9;
-    font-size: clamp(13px, 2.6vw, 17px);
+    font-size: clamp(13px, 2.6vmin, 17px);
     font-weight: 800;
     color: var(--accent);
     background: #ffffff;
     box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-    padding: 0 clamp(14px, 3vw, 20px);
-    height: clamp(40px, 7vw, 55px);
+    padding: 0 clamp(14px, 3vmin, 20px);
+    height: clamp(40px, 7vmin, 55px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -187,13 +187,13 @@
     left: 50%;
     transform: translate(-50%, -50%) translateX(-54px);
     z-index: 10;
-    width: clamp(40px, 7vw, 55px);
-    height: clamp(40px, 7vw, 55px);
+    width: clamp(40px, 7vmin, 55px);
+    height: clamp(40px, 7vmin, 55px);
     border-radius: 50%;
     background: #ffffff;
     border: none;
     box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-    font-size: clamp(18px, 3.2vw, 25px);
+    font-size: clamp(18px, 3.2vmin, 25px);
     cursor: pointer;
     color: var(--accent);
     transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -300,16 +300,19 @@
     .toolbar {
       top: max(env(safe-area-inset-top, 12px), 12px);
       flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      max-width: 42vw;
     }
   }
   .tool-btn {
-    width: clamp(30px, 6vw, 44px);
-    height: clamp(30px, 6vw, 44px);
+    width: clamp(30px, 6vmin, 44px);
+    height: clamp(30px, 6vmin, 44px);
     border-radius: 50%;
     border: none;
     background: rgba(255,255,255,0.9);
     box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-    font-size: clamp(13px, 2.6vw, 19px);
+    font-size: clamp(13px, 2.6vmin, 19px);
     cursor: pointer;
     color: var(--accent);
     transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -325,8 +328,8 @@
   .rounds-bar-text {
     background: rgba(255,255,255,0.95);
     border-radius: 999px;
-    padding: clamp(9px, 2vw, 12px) clamp(18px, 4vw, 24px);
-    font-size: clamp(15px, 3vw, 19px);
+    padding: clamp(9px, 2vmin, 12px) clamp(18px, 4vmin, 24px);
+    font-size: clamp(15px, 3vmin, 19px);
     font-weight: 800;
     color: #1e293b;
     box-shadow: 0 3px 10px rgba(0,0,0,0.2);
@@ -337,8 +340,8 @@
     background: var(--accent);
     color: #ffffff;
     border-radius: 999px;
-    padding: clamp(9px, 2vw, 12px) clamp(14px, 3vw, 18px);
-    font-size: clamp(13px, 2.6vw, 16px);
+    padding: clamp(9px, 2vmin, 12px) clamp(14px, 3vmin, 18px);
+    font-size: clamp(13px, 2.6vmin, 16px);
     font-weight: 800;
     box-shadow: 0 3px 10px rgba(0,0,0,0.2);
     cursor: pointer;
@@ -572,8 +575,8 @@
     gap: 6px;
   }
   .swatch {
-    width: clamp(20px, 4vw, 30px);
-    height: clamp(20px, 4vw, 30px);
+    width: clamp(20px, 4vmin, 30px);
+    height: clamp(20px, 4vmin, 30px);
     border-radius: 50%;
     border: 2px solid rgba(255,255,255,0.6);
     cursor: pointer;
@@ -588,11 +591,17 @@
     transform: translateX(-50%);
     z-index: 20;
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    max-width: 94vw;
+  }
+  .top-bar-row {
+    display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    max-width: 94vw;
   }
   .mode-bar {
     display: flex;
@@ -606,9 +615,9 @@
     border: none;
     background: var(--accent);
     color: #ffffff;
-    font-size: clamp(13px, 2.4vw, 17px);
+    font-size: clamp(13px, 2.4vmin, 17px);
     font-weight: 800;
-    padding: clamp(8px, 1.8vw, 12px) clamp(12px, 2.6vw, 18px);
+    padding: clamp(8px, 1.8vmin, 12px) clamp(12px, 2.6vmin, 18px);
     border-radius: 999px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.25);
     cursor: pointer;
@@ -623,9 +632,9 @@
     border: none;
     background: transparent;
     color: #64748b;
-    font-size: clamp(13px, 2.4vw, 17px);
+    font-size: clamp(13px, 2.4vmin, 17px);
     font-weight: 700;
-    padding: clamp(8px, 1.6vw, 12px) clamp(14px, 3.2vw, 26px);
+    padding: clamp(8px, 1.6vmin, 12px) clamp(14px, 3.2vmin, 26px);
     border-radius: 999px;
     cursor: pointer;
   }
@@ -685,9 +694,9 @@
   .single-step-btn {
     border: none;
     border-radius: 999px;
-    width: clamp(38px, 8vw, 48px);
-    height: clamp(38px, 8vw, 48px);
-    font-size: clamp(14px, 2.8vw, 17px);
+    width: clamp(38px, 8vmin, 48px);
+    height: clamp(38px, 8vmin, 48px);
+    font-size: clamp(14px, 2.8vmin, 17px);
     font-weight: 700;
     background: #f1f5f9;
     color: #475569;
@@ -793,13 +802,13 @@
     gap: 8px;
   }
   .step-btn {
-    width: clamp(34px, 6.5vw, 46px);
-    height: clamp(34px, 6.5vw, 46px);
+    width: clamp(34px, 6.5vmin, 46px);
+    height: clamp(34px, 6.5vmin, 46px);
     border-radius: 50%;
     border: none;
     background: rgba(255,255,255,0.16);
     color: #ffffff;
-    font-size: clamp(14px, 2.6vw, 17px);
+    font-size: clamp(14px, 2.6vmin, 17px);
     font-weight: 700;
     cursor: pointer;
   }
@@ -961,8 +970,8 @@
 
   /* accent swatches in settings scale slightly for larger screens too */
   .accent-swatch {
-    width: clamp(26px, 4vw, 32px);
-    height: clamp(26px, 4vw, 32px);
+    width: clamp(26px, 4vmin, 32px);
+    height: clamp(26px, 4vmin, 32px);
     border-radius: 50%;
     border: 2px solid transparent;
     cursor: pointer;
@@ -976,11 +985,13 @@
       <span class="rounds-bar-text" id="roundsBarText">🏆 A 0 : 0 B</span>
       <button class="game-start-btn" id="gameStartBtn" data-i18n="gameStart">▶ 게임 시작</button>
     </div>
-    <div class="mode-bar">
-      <button class="mode-btn active" id="modeAB">A / B</button>
-      <button class="mode-btn" id="modeSingle" data-i18n="modeCounter">카운터</button>
+    <div class="top-bar-row">
+      <div class="mode-bar">
+        <button class="mode-btn active" id="modeAB">A / B</button>
+        <button class="mode-btn" id="modeSingle" data-i18n="modeCounter">카운터</button>
+      </div>
+      <button class="timer-badge" id="timerBadge"></button>
     </div>
-    <button class="timer-badge" id="timerBadge"></button>
   </div>
 
   <div class="toolbar" id="toolbar">
