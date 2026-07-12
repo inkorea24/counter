@@ -1225,6 +1225,7 @@
 
   document.getElementById('timelineHeader').addEventListener('click', () => {
     timelinePanel.classList.toggle('open');
+    feedback('tap');
   });
   document.getElementById('timelineBtn').addEventListener('click', () => {
     timelinePanel.classList.toggle('open');
@@ -1738,17 +1739,17 @@
     settings.matchSets = (v && v > 0) ? v : null;
     saveAll();
   });
-  soundToggle.addEventListener('change', (e) => { settings.sound = e.target.checked; saveAll(); });
-  vibrateToggle.addEventListener('change', (e) => { settings.vibrate = e.target.checked; saveAll(); });
-  darkModeToggle.addEventListener('change', (e) => { applyDarkMode(e.target.checked); saveAll(); });
-  deuceToggle.addEventListener('change', (e) => { settings.deuce = e.target.checked; winAcknowledged = false; saveAll(); });
+  soundToggle.addEventListener('change', (e) => { settings.sound = e.target.checked; saveAll(); feedback('tap'); });
+  vibrateToggle.addEventListener('change', (e) => { settings.vibrate = e.target.checked; saveAll(); feedback('tap'); });
+  darkModeToggle.addEventListener('change', (e) => { applyDarkMode(e.target.checked); saveAll(); feedback('tap'); });
+  deuceToggle.addEventListener('change', (e) => { settings.deuce = e.target.checked; winAcknowledged = false; saveAll(); feedback('tap'); });
 
   const focusModeToggle = document.getElementById('focusModeToggle');
   const ttsToggle = document.getElementById('ttsToggle');
   focusModeToggle.checked = settings.focusMode;
   ttsToggle.checked = settings.tts;
-  focusModeToggle.addEventListener('change', (e) => { applyFocusMode(e.target.checked); saveAll(); });
-  ttsToggle.addEventListener('change', (e) => { settings.tts = e.target.checked; saveAll(); });
+  focusModeToggle.addEventListener('change', (e) => { applyFocusMode(e.target.checked); saveAll(); feedback('tap'); });
+  ttsToggle.addEventListener('change', (e) => { settings.tts = e.target.checked; saveAll(); feedback('tap'); });
 
   // tap-anywhere scoring for focus mode
   document.querySelectorAll('.section').forEach(sectionEl => {
@@ -1831,6 +1832,7 @@
   wakeLockToggle.addEventListener('change', (e) => {
     if (e.target.checked) requestWakeLock();
     else releaseWakeLock();
+    feedback('tap');
   });
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && wakeLockToggle.checked && !wakeLock) requestWakeLock();
@@ -2149,6 +2151,17 @@
     window.close();
     // if window.close() was blocked (plain browser tab), fall back to consuming history
     setTimeout(() => { history.back(); }, 50);
+  });
+
+  // ---- default tap feedback (sound + vibration) for every other button in the app ----
+  // (score +/-/reset and single-counter buttons already trigger their own feedback() call above,
+  // so they're excluded here to avoid double-firing.)
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    if (btn.classList.contains('action')) return;
+    if (btn.id === 'singlePlus' || btn.id === 'singleMinus' || btn.id === 'singleReset') return;
+    feedback('tap');
   });
 </script>
 </body>
