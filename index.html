@@ -1853,21 +1853,22 @@
   window.addEventListener('popstate', () => {
     if (allowExit) return; // user confirmed exit, let it actually navigate back/close
     exitConfirmOverlay.classList.add('show');
-    armBackGuard(); // re-arm immediately so the back button doesn't fall through while modal is open
+    // don't re-arm yet — only re-arm if the user cancels (see exitCancelBtn below).
+    // this keeps the "real" back depth accurate so a single confirm exits in one shot.
   });
 
   document.getElementById('exitCancelBtn').addEventListener('click', () => {
     exitConfirmOverlay.classList.remove('show');
+    armBackGuard(); // user chose to stay — re-arm the guard for the next back press
   });
 
   document.getElementById('exitConfirmBtn').addEventListener('click', () => {
     allowExit = true;
     exitConfirmOverlay.classList.remove('show');
-    // go back past both our guard entry AND the original entry in one shot,
-    // so the OS/browser sees no further history and actually closes the app
-    history.go(-2);
-    // fallback for contexts where history navigation has nowhere further to go
-    setTimeout(() => { window.close(); }, 300);
+    // try to actually close the app/tab directly first (works for standalone installed PWAs on Android)
+    window.close();
+    // if window.close() was blocked (plain browser tab), fall back to consuming history
+    setTimeout(() => { history.back(); }, 50);
   });
 </script>
 </body>
