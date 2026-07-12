@@ -322,15 +322,34 @@
     top: calc(max(env(safe-area-inset-top, 12px), 12px) + 52px);
     left: 14px;
     z-index: 15;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rounds-bar-text {
     background: rgba(255,255,255,0.95);
     border-radius: 999px;
-    padding: 8px 18px;
-    font-size: 13px;
+    padding: clamp(9px, 2vw, 12px) clamp(18px, 4vw, 24px);
+    font-size: clamp(15px, 3vw, 19px);
     font-weight: 800;
     color: #1e293b;
     box-shadow: 0 3px 10px rgba(0,0,0,0.2);
     white-space: nowrap;
   }
+  .game-start-btn {
+    border: none;
+    background: var(--accent);
+    color: #ffffff;
+    border-radius: 999px;
+    padding: clamp(9px, 2vw, 12px) clamp(14px, 3vw, 18px);
+    font-size: clamp(13px, 2.6vw, 16px);
+    font-weight: 800;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    cursor: pointer;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .game-start-btn.running { background: #059669; }
 
   /* collapsible timeline panel at the bottom */
   .timeline-list {
@@ -794,10 +813,11 @@
   /* ---------------- dark mode ---------------- */
   body.dark .mode-bar,
   body.dark .toolbar .tool-btn,
-  body.dark .rounds-bar,
+  body.dark .rounds-bar-text,
   body.dark .single-history-bar,
   body.dark .swap-btn,
-  body.dark .dice-btn {
+  body.dark .dice-btn,
+  body.dark .diff-badge {
     background: #1e293b;
     color: #f1f5f9;
   }
@@ -865,7 +885,10 @@
   </div>
 
   <div class="view visible" id="view-ab">
-  <div class="rounds-bar" id="roundsBar">🏆 A 0 : 0 B</div>
+  <div class="rounds-bar" id="roundsBar">
+    <span class="rounds-bar-text" id="roundsBarText">🏆 A 0 : 0 B</span>
+    <button class="game-start-btn" id="gameStartBtn">▶ 게임 시작</button>
+  </div>
 
   <div class="modal-overlay" id="timelinePanel">
     <div class="modal-card">
@@ -1526,8 +1549,52 @@
   const roundsBar = document.getElementById('roundsBar');
 
   function updateRoundsBar() {
-    roundsBar.textContent = `🏆 ${state.A.name} ${roundWins.A} : ${roundWins.B} ${state.B.name}`;
+    document.getElementById('roundsBarText').textContent = `🏆 ${state.A.name} ${roundWins.A} : ${roundWins.B} ${state.B.name}`;
   }
+
+  // ---- overall game stopwatch (counts up total game time) ----
+  const gameStartBtn = document.getElementById('gameStartBtn');
+  let gameSeconds = 0;
+  let gameRunning = false;
+  let gameInterval = null;
+
+  function formatGameTime(secs) {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    const mm = String(m).padStart(2, '0');
+    const ss = String(s).padStart(2, '0');
+    return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  }
+  function renderGameStopwatch() {
+    if (gameSeconds === 0 && !gameRunning) {
+      gameStartBtn.textContent = '▶ 게임 시작';
+    } else {
+      gameStartBtn.textContent = (gameRunning ? '⏸ ' : '▶ ') + formatGameTime(gameSeconds);
+    }
+    gameStartBtn.classList.toggle('running', gameRunning);
+  }
+  gameStartBtn.addEventListener('click', () => {
+    if (gameRunning) {
+      clearInterval(gameInterval);
+      gameRunning = false;
+    } else {
+      gameRunning = true;
+      gameInterval = setInterval(() => {
+        gameSeconds++;
+        renderGameStopwatch();
+      }, 1000);
+    }
+    renderGameStopwatch();
+    feedback('tap');
+  });
+  function resetGameStopwatch() {
+    clearInterval(gameInterval);
+    gameRunning = false;
+    gameSeconds = 0;
+    renderGameStopwatch();
+  }
+  renderGameStopwatch();
 
   function saveAll() {
     safeSave({
@@ -1683,6 +1750,7 @@
     state.A.count = 0;
     state.B.count = 0;
     updateRoundsBar();
+    resetGameStopwatch();
     render();
     saveAll();
     document.getElementById('matchWinOverlay').classList.remove('show');
