@@ -428,6 +428,25 @@
   .win-save-btn { background: var(--accent); color: #ffffff; }
   .win-continue-btn { background: #f1f5f9; color: #64748b; }
 
+  /* last 10 seconds: full-screen translucent countdown */
+  .timer-flash {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+    pointer-events: none;
+  }
+  .timer-flash.show { display: flex; }
+  .timer-flash-num {
+    font-size: 40vw;
+    font-weight: 800;
+    color: rgba(255,255,255,0.85);
+    font-variant-numeric: tabular-nums;
+  }
+
   /* landscape: switch A/B from top-bottom to left-right */
   @media (orientation: landscape) {
     .app {
@@ -468,12 +487,17 @@
   }
   .swatch.active { border-color: #ffffff; box-shadow: 0 0 0 2px rgba(255,255,255,0.4); }
 
-  .mode-bar {
+  .top-bar-wrap {
     position: fixed;
     top: max(env(safe-area-inset-top, 12px), 12px);
     left: 50%;
     transform: translateX(-50%);
     z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mode-bar {
     display: flex;
     gap: 6px;
     background: #ffffff;
@@ -481,6 +505,23 @@
     padding: 4px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.25);
   }
+  .timer-badge {
+    border: none;
+    background: var(--accent);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 10px 14px;
+    border-radius: 999px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    gap: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer-badge.show { display: flex; }
+  .timer-badge.paused { opacity: 0.55; }
   .mode-btn {
     border: none;
     background: transparent;
@@ -715,9 +756,12 @@
 </style>
 </head>
 <body>
-  <div class="mode-bar">
-    <button class="mode-btn active" id="modeAB">A / B</button>
-    <button class="mode-btn" id="modeSingle">단일 카운터</button>
+  <div class="top-bar-wrap">
+    <div class="mode-bar">
+      <button class="mode-btn active" id="modeAB">A / B</button>
+      <button class="mode-btn" id="modeSingle">단일 카운터</button>
+    </div>
+    <button class="timer-badge" id="timerBadge"></button>
   </div>
 
   <div class="view visible" id="view-ab">
@@ -860,12 +904,12 @@
   <div class="modal-overlay" id="timerOverlay">
     <div class="modal-card">
       <div class="modal-title">타이머 ⏱️</div>
-      <div class="timer-display" id="timerDisplay">03:00</div>
+      <div class="timer-display" id="timerDisplay">00:00</div>
       <div class="timer-presets">
-        <button class="timer-preset-btn" data-secs="60">1분</button>
-        <button class="timer-preset-btn active" data-secs="180">3분</button>
-        <button class="timer-preset-btn" data-secs="300">5분</button>
-        <button class="timer-preset-btn" data-secs="600">10분</button>
+        <button class="timer-preset-btn" data-secs="60">+1분</button>
+        <button class="timer-preset-btn" data-secs="300">+5분</button>
+        <button class="timer-preset-btn" data-secs="600">+10분</button>
+        <button class="timer-preset-btn" data-secs="1800">+30분</button>
       </div>
       <div class="timer-actions">
         <button class="timer-start-btn" id="timerStartBtn">시작</button>
@@ -884,6 +928,18 @@
       </div>
       <button class="win-continue-btn" id="winContinueBtn">계속 진행</button>
     </div>
+  </div>
+
+  <div class="modal-overlay" id="timerDoneOverlay">
+    <div class="modal-card win-card">
+      <div class="win-emoji">⏰</div>
+      <div class="win-text">시간 종료!</div>
+      <button class="win-continue-btn" id="timerDoneCloseBtn">확인</button>
+    </div>
+  </div>
+
+  <div class="timer-flash" id="timerFlash">
+    <div class="timer-flash-num" id="timerFlashNum">10</div>
   </div>
 
   <div class="view" id="view-single">
@@ -1448,8 +1504,12 @@
   const timerOverlay = document.getElementById('timerOverlay');
   const timerDisplay = document.getElementById('timerDisplay');
   const timerStartBtn = document.getElementById('timerStartBtn');
-  let timerTotal = 180;
-  let timerRemaining = 180;
+  const timerBadge = document.getElementById('timerBadge');
+  const timerFlash = document.getElementById('timerFlash');
+  const timerFlashNum = document.getElementById('timerFlashNum');
+  const timerDoneOverlay = document.getElementById('timerDoneOverlay');
+  let timerTotal = 0;
+  let timerRemaining = 0;
   let timerInterval = null;
   let timerRunning = false;
 
@@ -1460,48 +1520,83 @@
   }
   function renderTimer() {
     timerDisplay.textContent = formatTime(timerRemaining);
-    timerDisplay.classList.toggle('warn', timerRemaining <= 10);
+    timerDisplay.classList.toggle('warn', timerRemaining <= 10 && timerRemaining > 0);
+    updateTimerBadge();
   }
+  function updateTimerBadge() {
+    if (timerTotal <= 0) {
+      timerBadge.classList.remove('show');
+      return;
+    }
+    timerBadge.classList.add('show');
+    timerBadge.classList.toggle('paused', !timerRunning);
+    timerBadge.textContent = (timerRunning ? '⏱️ ' : '⏸️ ') + formatTime(timerRemaining);
+  }
+
   document.getElementById('timerBtn').addEventListener('click', () => timerOverlay.classList.add('show'));
   document.getElementById('timerCloseBtn').addEventListener('click', () => timerOverlay.classList.remove('show'));
 
+  // preset buttons ADD time cumulatively (e.g. tap +10 twice, +5 once = 25:00)
   document.querySelectorAll('.timer-preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (timerRunning) return;
-      document.querySelectorAll('.timer-preset-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      timerTotal = parseInt(btn.getAttribute('data-secs'), 10);
-      timerRemaining = timerTotal;
+      const secs = parseInt(btn.getAttribute('data-secs'), 10);
+      timerTotal += secs;
+      timerRemaining += secs;
       renderTimer();
     });
   });
 
-  timerStartBtn.addEventListener('click', () => {
-    if (timerRunning) {
-      clearInterval(timerInterval);
-      timerRunning = false;
-      timerStartBtn.textContent = '시작';
-      return;
-    }
+  function startTimer() {
+    if (timerRemaining <= 0) return;
     timerRunning = true;
     timerStartBtn.textContent = '일시정지';
     timerInterval = setInterval(() => {
       timerRemaining--;
       renderTimer();
+
+      if (timerRemaining <= 10 && timerRemaining > 0) {
+        timerFlashNum.textContent = timerRemaining;
+        timerFlash.classList.add('show');
+        feedback('tap');
+      } else {
+        timerFlash.classList.remove('show');
+      }
+
       if (timerRemaining <= 0) {
         clearInterval(timerInterval);
         timerRunning = false;
         timerStartBtn.textContent = '시작';
+        timerFlash.classList.remove('show');
+        timerTotal = 0;
+        renderTimer();
         feedback('win');
+        timerDoneOverlay.classList.add('show');
       }
     }, 1000);
-  });
+  }
+  function pauseTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerStartBtn.textContent = '시작';
+    timerFlash.classList.remove('show');
+    updateTimerBadge();
+  }
+  function toggleTimer() {
+    if (timerRunning) pauseTimer();
+    else startTimer();
+  }
+
+  timerStartBtn.addEventListener('click', toggleTimer);
+  timerBadge.addEventListener('click', toggleTimer);
+  document.getElementById('timerDoneCloseBtn').addEventListener('click', () => timerDoneOverlay.classList.remove('show'));
 
   document.getElementById('timerResetBtn').addEventListener('click', () => {
     clearInterval(timerInterval);
     timerRunning = false;
     timerStartBtn.textContent = '시작';
-    timerRemaining = timerTotal;
+    timerTotal = 0;
+    timerRemaining = 0;
+    timerFlash.classList.remove('show');
     renderTimer();
   });
 

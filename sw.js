@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ab-counter-v4';
+const CACHE_NAME = 'ab-counter-v5';
 const ASSETS = [
   './index.html',
   './manifest.json',
