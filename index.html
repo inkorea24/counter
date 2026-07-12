@@ -770,6 +770,7 @@
     <button class="tool-btn" id="redoBtn" title="다시하기">↪️</button>
     <button class="tool-btn" id="serveBtn" title="서브 전환">🏐</button>
     <button class="tool-btn" id="timerBtn" title="타이머">⏱️</button>
+    <button class="tool-btn" id="shareBtn" title="결과 공유">📤</button>
     <button class="tool-btn" id="settingsBtn" title="설정">⚙️</button>
   </div>
   <div class="rounds-bar" id="roundsBar">🏆 A 0 : 0 B</div>
@@ -844,6 +845,12 @@
         <div class="modal-row-label">목표 점수 알림</div>
         <input class="modal-input" type="number" id="targetScoreInput" placeholder="없음" min="1">
       </div>
+
+      <div class="modal-row">
+        <div class="modal-row-label">경기 승리 세트 수</div>
+        <input class="modal-input" type="number" id="matchSetsInput" placeholder="없음" min="1">
+      </div>
+      <div style="font-size:11px; color:#94a3b8; margin-top:-10px;">목표 점수를 먼저 설정해야 세트가 기록돼요. 이 숫자만큼 세트를 먼저 이기면 경기 승리!</div>
 
       <div class="modal-row">
         <div class="modal-row-label">소리 피드백</div>
@@ -937,6 +944,30 @@
       <button class="win-continue-btn" id="timerDoneCloseBtn">확인</button>
     </div>
   </div>
+
+  <div class="modal-overlay" id="matchWinOverlay">
+    <div class="modal-card win-card">
+      <div class="win-emoji">🏆</div>
+      <div class="win-text" id="matchWinText">A 경기 승리!</div>
+      <div class="win-actions">
+        <button class="win-save-btn" id="matchNewGameBtn">새 경기 시작</button>
+      </div>
+      <button class="win-continue-btn" id="matchWinCloseBtn">닫기</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="shareOverlay">
+    <div class="modal-card" style="align-items:center;">
+      <div class="modal-title">결과 공유 📤</div>
+      <canvas id="shareCanvas" width="800" height="500" style="width:100%; border-radius:14px;"></canvas>
+      <div class="dice-actions" style="width:100%;">
+        <button class="dice-roll-btn" id="shareSendBtn">공유하기</button>
+        <button class="dice-close-btn" id="shareCloseBtn">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="hiddenShareCanvas" width="1200" height="750" style="display:none;"></canvas>
 
   <div class="timer-flash" id="timerFlash">
     <div class="timer-flash-num" id="timerFlashNum">10</div>
@@ -1268,7 +1299,7 @@
 
   // ---- settings state ----
   const settings = Object.assign(
-    { targetScore: null, sound: true, vibrate: true, dark: false, accent: 'navy' },
+    { targetScore: null, matchSets: null, sound: true, vibrate: true, dark: false, accent: 'navy' },
     saved.settings || {}
   );
   const roundWins = Object.assign({ A: 0, B: 0 }, saved.roundWins || {});
@@ -1381,6 +1412,28 @@
     document.getElementById('winOverlay').classList.remove('show');
     render();
     saveAll();
+
+    if (settings.matchSets && roundWins[winnerKey] >= settings.matchSets) {
+      const otherKey = winnerKey === 'A' ? 'B' : 'A';
+      document.getElementById('matchWinText').textContent =
+        `${state[winnerKey].name} 경기 승리! (세트 ${roundWins[winnerKey]}:${roundWins[otherKey]})`;
+      document.getElementById('matchWinOverlay').classList.add('show');
+      feedback('win');
+    }
+  });
+
+  document.getElementById('matchWinCloseBtn').addEventListener('click', () => {
+    document.getElementById('matchWinOverlay').classList.remove('show');
+  });
+  document.getElementById('matchNewGameBtn').addEventListener('click', () => {
+    roundWins.A = 0;
+    roundWins.B = 0;
+    state.A.count = 0;
+    state.B.count = 0;
+    updateRoundsBar();
+    render();
+    saveAll();
+    document.getElementById('matchWinOverlay').classList.remove('show');
   });
 
   document.getElementById('resetRoundsBtn').addEventListener('click', () => {
@@ -1401,9 +1454,11 @@
   const soundToggle = document.getElementById('soundToggle');
   const vibrateToggle = document.getElementById('vibrateToggle');
   const darkModeToggle = document.getElementById('darkModeToggle');
+  const matchSetsInput = document.getElementById('matchSetsInput');
 
   // reflect loaded settings in the UI
   if (settings.targetScore) targetScoreInput.value = settings.targetScore;
+  if (settings.matchSets) matchSetsInput.value = settings.matchSets;
   soundToggle.checked = settings.sound;
   vibrateToggle.checked = settings.vibrate;
   darkModeToggle.checked = settings.dark;
@@ -1412,6 +1467,11 @@
     const v = parseInt(e.target.value, 10);
     settings.targetScore = (v && v > 0) ? v : null;
     winAcknowledged = false;
+    saveAll();
+  });
+  matchSetsInput.addEventListener('input', (e) => {
+    const v = parseInt(e.target.value, 10);
+    settings.matchSets = (v && v > 0) ? v : null;
     saveAll();
   });
   soundToggle.addEventListener('change', (e) => { settings.sound = e.target.checked; saveAll(); });
@@ -1485,6 +1545,7 @@
       if (data.settings) Object.assign(settings, data.settings);
       if (data.roundWins) Object.assign(roundWins, data.roundWins);
       targetScoreInput.value = settings.targetScore || '';
+      matchSetsInput.value = settings.matchSets || '';
       soundToggle.checked = settings.sound;
       vibrateToggle.checked = settings.vibrate;
       darkModeToggle.checked = settings.dark;
@@ -1601,6 +1662,76 @@
   });
 
   renderTimer();
+
+  // ---- share result as image ----
+  const COLOR_HEX = {
+    blue: '#2563eb', emerald: '#059669', rose: '#e11d48',
+    amber: '#d97706', violet: '#7c3aed', slate: '#334155'
+  };
+  const shareOverlay = document.getElementById('shareOverlay');
+  const shareCanvas = document.getElementById('shareCanvas');
+  const hiddenCanvas = document.getElementById('hiddenShareCanvas');
+
+  function drawResultCard(canvas) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const half = W / 2;
+
+    ctx.fillStyle = COLOR_HEX[state.A.color] || '#2563eb';
+    ctx.fillRect(0, 0, half, H);
+    ctx.fillStyle = COLOR_HEX[state.B.color] || '#e11d48';
+    ctx.fillRect(half, 0, half, H);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+
+    ctx.font = `bold ${Math.round(H * 0.07)}px sans-serif`;
+    ctx.fillText(state.A.name, half / 2, H * 0.28);
+    ctx.fillText(state.B.name, half + half / 2, H * 0.28);
+
+    ctx.font = `bold ${Math.round(H * 0.26)}px sans-serif`;
+    ctx.fillText(state.A.count, half / 2, H * 0.58);
+    ctx.fillText(state.B.count, half + half / 2, H * 0.58);
+
+    if (roundWins.A > 0 || roundWins.B > 0) {
+      ctx.font = `bold ${Math.round(H * 0.06)}px sans-serif`;
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillText(`세트 ${roundWins.A} : ${roundWins.B}`, half, H * 0.78);
+    }
+
+    ctx.font = `${Math.round(H * 0.045)}px sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.fillText('A/B 카운터', half, H * 0.94);
+  }
+
+  function openShare() {
+    drawResultCard(shareCanvas);
+    drawResultCard(hiddenCanvas);
+    shareOverlay.classList.add('show');
+  }
+
+  document.getElementById('shareBtn').addEventListener('click', openShare);
+  document.getElementById('shareCloseBtn').addEventListener('click', () => shareOverlay.classList.remove('show'));
+
+  document.getElementById('shareSendBtn').addEventListener('click', () => {
+    hiddenCanvas.toBlob(async (blob) => {
+      const file = new File([blob], 'score.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: '경기 결과' });
+          return;
+        } catch (e) { /* user cancelled or share failed, fall back to download */ }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'score.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }, 'image/png');
+  });
 </script>
 </body>
 </html>
