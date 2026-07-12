@@ -557,11 +557,11 @@
     background: #ffffff;
     border-radius: 28px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    padding: 36px 28px;
+    padding: 28px 28px 36px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 32px;
+    gap: 16px;
   }
   .single-label {
     font-size: 15px;
@@ -581,26 +581,27 @@
   .single-count.neg { color: #e11d48; }
   .single-buttons {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     gap: 14px;
     width: 100%;
   }
   .single-btn {
     flex: 1;
     border: none;
-    border-radius: 18px;
-    padding: 20px 0;
-    font-size: 22px;
+    border-radius: 22px;
+    padding: 0;
+    min-height: 180px;
+    font-size: 26px;
     font-weight: 700;
     cursor: pointer;
     transition: transform 0.08s ease, background 0.15s ease;
   }
-  .single-btn:active { transform: scale(0.93); }
+  .single-btn:active { transform: scale(0.96); }
   .single-minus { background: #ffe4e6; color: #e11d48; }
   .single-minus:active { background: #fecdd3; }
   .single-plus { background: #d1fae5; color: #059669; }
   .single-plus:active { background: #a7f3d0; }
-  .single-reset { background: #f1f5f9; color: #64748b; flex: 0.7; font-size: 18px; }
+  .single-reset { background: #f1f5f9; color: #64748b; flex: 0.6; font-size: 20px; }
   .single-reset:active { background: #e2e8f0; }
 
   .single-history-bar {
@@ -948,10 +949,12 @@
   <div class="modal-overlay" id="matchWinOverlay">
     <div class="modal-card win-card">
       <div class="win-emoji">🏆</div>
+      <div id="matchSetsBreakdown" style="font-size:14px; color:#475569; line-height:1.7;"></div>
       <div class="win-text" id="matchWinText">A 경기 승리!</div>
       <div class="win-actions">
         <button class="win-save-btn" id="matchNewGameBtn">새 경기 시작</button>
       </div>
+      <button class="dice-roll-btn" id="matchShareBtn" style="width:100%;">📤 공유하기</button>
       <button class="win-continue-btn" id="matchWinCloseBtn">닫기</button>
     </div>
   </div>
@@ -1402,8 +1405,11 @@
     document.getElementById('winOverlay').classList.remove('show');
   });
 
+  let setHistory = [];
+
   document.getElementById('winSaveBtn').addEventListener('click', () => {
     const winnerKey = state.A.count >= state.B.count ? 'A' : 'B';
+    setHistory.push({ a: state.A.count, b: state.B.count, winner: winnerKey });
     roundWins[winnerKey]++;
     updateRoundsBar();
     state.A.count = 0;
@@ -1415,8 +1421,14 @@
 
     if (settings.matchSets && roundWins[winnerKey] >= settings.matchSets) {
       const otherKey = winnerKey === 'A' ? 'B' : 'A';
+      const breakdown = document.getElementById('matchSetsBreakdown');
+      const colorA = COLOR_HEX[state.A.color] || '#2563eb';
+      const colorB = COLOR_HEX[state.B.color] || '#e11d48';
+      breakdown.innerHTML = setHistory.map((s, i) =>
+        `${i + 1}세트&nbsp; <b style="color:${colorA}">${state.A.name}</b> ${s.a} : ${s.b} <b style="color:${colorB}">${state.B.name}</b>`
+      ).join('<br>');
       document.getElementById('matchWinText').textContent =
-        `${state[winnerKey].name} 경기 승리! (세트 ${roundWins[winnerKey]}:${roundWins[otherKey]})`;
+        `${roundWins[winnerKey]}세트 승리로 ${state[winnerKey].name} 팀이 승리!`;
       document.getElementById('matchWinOverlay').classList.add('show');
       feedback('win');
     }
@@ -1428,6 +1440,7 @@
   document.getElementById('matchNewGameBtn').addEventListener('click', () => {
     roundWins.A = 0;
     roundWins.B = 0;
+    setHistory = [];
     state.A.count = 0;
     state.B.count = 0;
     updateRoundsBar();
@@ -1439,6 +1452,7 @@
   document.getElementById('resetRoundsBtn').addEventListener('click', () => {
     roundWins.A = 0;
     roundWins.B = 0;
+    setHistory = [];
     updateRoundsBar();
     saveAll();
   });
@@ -1704,13 +1718,69 @@
     ctx.fillText('A/B 카운터', half, H * 0.94);
   }
 
-  function openShare() {
-    drawResultCard(shareCanvas);
-    drawResultCard(hiddenCanvas);
+  function drawMatchSummaryCard(canvas) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.round(H * 0.09)}px sans-serif`;
+    ctx.fillText('🏆 경기 결과', W / 2, H * 0.14);
+
+    ctx.font = `bold ${Math.round(H * 0.055)}px sans-serif`;
+    ctx.fillStyle = COLOR_HEX[state.A.color] || '#2563eb';
+    ctx.textAlign = 'right';
+    ctx.fillText(state.A.name, W * 0.42, H * 0.14 + H * 0.01);
+    ctx.fillStyle = COLOR_HEX[state.B.color] || '#e11d48';
+    ctx.textAlign = 'left';
+    ctx.fillText(state.B.name, W * 0.58, H * 0.14 + H * 0.01);
+
+    const startY = H * 0.32;
+    const lineH = H * 0.11;
+    ctx.textAlign = 'center';
+    setHistory.forEach((s, i) => {
+      const y = startY + i * lineH;
+      ctx.font = `${Math.round(H * 0.045)}px sans-serif`;
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.fillText(`${i + 1}세트`, W / 2, y);
+      ctx.font = `bold ${Math.round(H * 0.07)}px sans-serif`;
+      ctx.fillStyle = s.winner === 'A' ? (COLOR_HEX[state.A.color] || '#2563eb') : '#ffffff';
+      ctx.textAlign = 'right';
+      ctx.fillText(s.a, W / 2 - 20, y + H * 0.075);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.fillText(':', W / 2, y + H * 0.075);
+      ctx.fillStyle = s.winner === 'B' ? (COLOR_HEX[state.B.color] || '#e11d48') : '#ffffff';
+      ctx.textAlign = 'left';
+      ctx.fillText(s.b, W / 2 + 20, y + H * 0.075);
+      ctx.textAlign = 'center';
+    });
+
+    const winnerKey = roundWins.A >= roundWins.B ? 'A' : 'B';
+    ctx.font = `bold ${Math.round(H * 0.06)}px sans-serif`;
+    ctx.fillStyle = COLOR_HEX[state[winnerKey].color] || '#ffffff';
+    ctx.fillText(
+      `${roundWins[winnerKey]}세트 승리로 ${state[winnerKey].name} 팀이 승리!`,
+      W / 2, H * 0.9
+    );
+
+    ctx.font = `${Math.round(H * 0.035)}px sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText('A/B 카운터', W / 2, H * 0.96);
+  }
+
+  function openShare(drawFn) {
+    const fn = drawFn || drawResultCard;
+    fn(shareCanvas);
+    fn(hiddenCanvas);
     shareOverlay.classList.add('show');
   }
 
-  document.getElementById('shareBtn').addEventListener('click', openShare);
+  document.getElementById('shareBtn').addEventListener('click', () => openShare());
+  document.getElementById('matchShareBtn').addEventListener('click', () => openShare(drawMatchSummaryCard));
   document.getElementById('shareCloseBtn').addEventListener('click', () => shareOverlay.classList.remove('show'));
 
   document.getElementById('shareSendBtn').addEventListener('click', () => {
