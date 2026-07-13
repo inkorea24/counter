@@ -66,16 +66,20 @@
     font-size: 19px;
     font-weight: 800;
     letter-spacing: 0.03em;
-    opacity: 0.9;
-    padding: 4px 10px;
-    border-radius: 8px;
+    opacity: 0.95;
+    padding: clamp(8px, 2vmin, 12px) clamp(16px, 4vmin, 22px);
+    border-radius: 999px;
     max-width: 90%;
     text-align: center;
     outline: none;
     border: none;
-    background: transparent;
+    background: rgba(255,255,255,0.18);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: background 0.15s ease;
   }
-  .label:focus { background: rgba(255,255,255,0.15); }
+  .label:active { background: rgba(255,255,255,0.3); }
+  .label:focus { background: rgba(255,255,255,0.3); }
   .count {
     font-size: 68px;
     font-weight: 800;
@@ -321,9 +325,14 @@
   .tool-btn.disabled { opacity: 0.35; pointer-events: none; }
 
   .rounds-bar {
+    position: fixed;
+    top: max(env(safe-area-inset-top, 12px), 12px);
+    right: calc(50% + 30px);
+    z-index: 20;
     display: flex;
     align-items: center;
     gap: 8px;
+    max-width: 56vw;
   }
   .rounds-bar-text {
     background: rgba(255,255,255,0.95);
@@ -591,17 +600,9 @@
     transform: translateX(-50%);
     z-index: 20;
     display: flex;
-    flex-direction: column;
     align-items: center;
     gap: 8px;
     max-width: 94vw;
-  }
-  .top-bar-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
   }
   .mode-bar {
     display: flex;
@@ -980,18 +981,17 @@
 </style>
 </head>
 <body>
+  <div class="rounds-bar" id="roundsBar">
+    <span class="rounds-bar-text" id="roundsBarText">🏆 A 0 : 0 B</span>
+    <button class="game-start-btn" id="gameStartBtn" data-i18n="gameStart">▶ 게임 시작</button>
+  </div>
+
   <div class="top-bar-wrap">
-    <div class="rounds-bar" id="roundsBar">
-      <span class="rounds-bar-text" id="roundsBarText">🏆 A 0 : 0 B</span>
-      <button class="game-start-btn" id="gameStartBtn" data-i18n="gameStart">▶ 게임 시작</button>
+    <div class="mode-bar">
+      <button class="mode-btn active" id="modeAB">A / B</button>
+      <button class="mode-btn" id="modeSingle" data-i18n="modeCounter">카운터</button>
     </div>
-    <div class="top-bar-row">
-      <div class="mode-bar">
-        <button class="mode-btn active" id="modeAB">A / B</button>
-        <button class="mode-btn" id="modeSingle" data-i18n="modeCounter">카운터</button>
-      </div>
-      <button class="timer-badge" id="timerBadge"></button>
-    </div>
+    <button class="timer-badge" id="timerBadge"></button>
   </div>
 
   <div class="toolbar" id="toolbar">
@@ -1647,7 +1647,7 @@
       const key = label.getAttribute('data-name');
       state[key].name = label.textContent.trim() || key;
     });
-    label.addEventListener('blur', () => { render(); saveAll(); });
+    label.addEventListener('blur', () => { render(); updateRoundsBar(); saveAll(); });
   });
 
   // +/-/reset with long-press auto-repeat (reads current key from data-target, since it can change after a swap)
