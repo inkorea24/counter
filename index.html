@@ -350,8 +350,8 @@
     background: var(--accent);
     color: #ffffff;
     border-radius: 999px;
-    padding: clamp(12px, 3vmin, 16px) clamp(18px, 4.5vmin, 24px);
-    font-size: clamp(16px, 3.6vmin, 21px);
+    padding: clamp(8px, 2vmin, 11px) clamp(13px, 3vmin, 17px);
+    font-size: clamp(14px, 2.8vmin, 17px);
     font-weight: 800;
     box-shadow: 0 3px 10px rgba(0,0,0,0.2);
     cursor: pointer;
@@ -1411,15 +1411,18 @@
       <h3>🏆 A/B 점수판</h3>
       <ul>
         <li>−/+ 버튼으로 점수 조절, 0.45초 이상 누르면 연속 증가</li>
-        <li>이름 글자를 탭해서 팀 이름 수정</li>
+        <li>이름 알약을 탭해서 팀 이름 수정 (탭하기 쉽게 알약 모양으로 표시)</li>
         <li>하단 색상 점으로 팀 색상 변경</li>
         <li>중앙 ⇅ 버튼으로 A/B 위치 교체, 🎲 버튼으로 선공 정하기</li>
         <li>🏐 버튼으로 서브 표시 전환</li>
+        <li>화면 왼쪽 위 라운드 스코어는 항상 고정되어 팀 이름이 길어져도 왼쪽으로만 늘어나요</li>
       </ul>
-      <h3>⏱️ 타이머 / 📜 타임라인</h3>
+      <h3>⏱️ 게임 시간 / 타이머 / 📜 타임라인</h3>
       <ul>
-        <li>+1/+5/+10/+30분 버튼은 누를 때마다 누적됨</li>
-        <li>종료되면 그 순간 점수로 승리팀 표시 + 공유 가능</li>
+        <li>라운드 스코어 위 "게임 시작" 버튼: 탭하면 전체 경기 시간이 흘러가요 (시작/일시정지 토글)</li>
+        <li>2초 이상 길게 누르면 게임 시간이 0으로 초기화돼요</li>
+        <li>⏱️ 타이머는 +1/+5/+10/+30분 버튼을 누를 때마다 누적됨</li>
+        <li>타이머 종료되면 그 순간 점수로 승리팀 표시 + 공유 가능</li>
         <li>📜 버튼으로 경기 기록(타임라인) 확인</li>
       </ul>
       <h3>🏆 세트 · 듀스 · 경기 집중 모드</h3>
@@ -1431,8 +1434,10 @@
       <h3>⚙️ 설정</h3>
       <ul>
         <li>소리·진동·다크모드·화면 꺼짐 방지·음성 안내(TTS)</li>
+        <li>언어 / Language: 한국어 ↔ English 즉시 전환 (이 설명서도 같이 바뀜)</li>
         <li>앱 강조색, 커스텀 증감 단위 추가</li>
-        <li>설정 저장 슬롯으로 여러 구성을 저장/전환</li>
+        <li><b>설정 저장 슬롯</b>: 설정1/2/3에 이름 붙여 각각 저장/불러오기 (예: "배구용", "탁구용")</li>
+        <li>이 사용설명서도 설정 맨 아래 📖 버튼으로 언제든 다시 볼 수 있어요</li>
       </ul>
       <h3>🔢 카운터 모드</h3>
       <ul>
@@ -1442,21 +1447,24 @@
       <h3>📤 결과 공유 / 🚪 종료</h3>
       <ul>
         <li>현재 점수 또는 경기 결과를 이미지로 공유</li>
-        <li>뒤로가기 버튼 누르면 종료 확인 팝업 표시</li>
+        <li>뒤로가기 버튼 누르면 종료 확인 팝업 표시 (홈 화면 설치 앱에서 가장 안정적)</li>
       </ul>
     `,
     en: `
       <h3>🏆 A/B Scoreboard</h3>
       <ul>
         <li>Tap −/+ to adjust score; hold 0.45s+ to increase rapidly</li>
-        <li>Tap a name to rename that team</li>
+        <li>Tap the name pill to rename that team (shaped like a pill for easy tapping)</li>
         <li>Pick a team color from the dots below</li>
         <li>⇅ swaps A/B positions, 🎲 decides who goes first</li>
         <li>🏐 toggles the serve indicator</li>
+        <li>The round score in the top-left stays fixed — long team names only push it further left, never overlapping other buttons</li>
       </ul>
-      <h3>⏱️ Timer / 📜 Timeline</h3>
+      <h3>⏱️ Game Time / Timer / 📜 Timeline</h3>
       <ul>
-        <li>+1/+5/+10/+30 min buttons stack up each tap</li>
+        <li>The "Start Game" button above the round score runs a stopwatch for the whole match (tap to start/pause)</li>
+        <li>Hold it 2+ seconds to reset the game time to zero</li>
+        <li>⏱️ Timer: +1/+5/+10/+30 min buttons stack up each tap</li>
         <li>When time's up, the winner is shown based on the current score + can be shared</li>
         <li>📜 opens the game timeline log</li>
       </ul>
@@ -1469,8 +1477,10 @@
       <h3>⚙️ Settings</h3>
       <ul>
         <li>Sound, vibration, dark mode, keep-screen-on, voice announcements (TTS)</li>
+        <li>Language: switch Korean ↔ English instantly (this guide follows too)</li>
         <li>Accent color, custom step amounts</li>
-        <li>Save/switch between multiple setting slots</li>
+        <li><b>Setting slots</b>: name and save/load up to 3 setups (e.g. "Volleyball", "Table Tennis")</li>
+        <li>Reopen this guide anytime via the 📖 button at the bottom of Settings</li>
       </ul>
       <h3>🔢 Counter Mode</h3>
       <ul>
@@ -1480,7 +1490,7 @@
       <h3>📤 Share / 🚪 Exit</h3>
       <ul>
         <li>Share the current score or match result as an image</li>
-        <li>Pressing back shows an exit confirmation</li>
+        <li>Pressing back shows an exit confirmation (most reliable when installed to the home screen)</li>
       </ul>
     `
   };
@@ -1954,7 +1964,20 @@
     }
     gameStartBtn.classList.toggle('running', gameRunning);
   }
+  let gameLongPressFired = false;
+  let gameLongPressTimer = null;
+  gameStartBtn.addEventListener('pointerdown', () => {
+    gameLongPressFired = false;
+    gameLongPressTimer = setTimeout(() => {
+      gameLongPressFired = true;
+      resetGameStopwatch();
+      feedback('win');
+    }, 2000);
+  });
+  gameStartBtn.addEventListener('pointerup', () => clearTimeout(gameLongPressTimer));
+  gameStartBtn.addEventListener('pointerleave', () => clearTimeout(gameLongPressTimer));
   gameStartBtn.addEventListener('click', () => {
+    if (gameLongPressFired) { gameLongPressFired = false; return; }
     if (gameRunning) {
       clearInterval(gameInterval);
       gameRunning = false;
