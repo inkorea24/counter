@@ -1,6 +1,6 @@
 {
-  "name": "카운터 프로",
-  "short_name": "카운터 프로",
+  "name": "스코어 카운터 프로",
+  "short_name": "스코어 카운터 프로",
   "description": "A/B 점수판 + 단일 카운터 앱",
   "start_url": "./index.html",
   "display": "standalone",
