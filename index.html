@@ -1314,6 +1314,7 @@
   const I18N = {
     ko: {
       gameStart: '▶ 게임 시작', gamePause: '⏸ ', gamePlay: '▶ ',
+      playerA: 'A 플레이어', playerB: 'B 플레이어',
       modeCounter: '카운터',
       undo: '되돌리기', redo: '다시하기', serve: '서브 전환', timerTitle: '타이머',
       shareTitle: '결과 공유', timelineTitle: '경기 타임라인', settingsTitle: '설정',
@@ -1360,6 +1361,7 @@
     },
     en: {
       gameStart: '▶ Start Game', gamePause: '⏸ ', gamePlay: '▶ ',
+      playerA: 'Player A', playerB: 'Player B',
       modeCounter: 'Counter',
       undo: 'Undo', redo: 'Redo', serve: 'Toggle Serve', timerTitle: 'Timer',
       shareTitle: 'Share Result', timelineTitle: 'Game Timeline', settingsTitle: 'Settings',
@@ -1509,6 +1511,23 @@
       if (I18N[lang] && I18N[lang][key] != null) el.placeholder = I18N[lang][key];
     });
     document.documentElement.lang = lang;
+
+    // only retranslate the A/B default names if the user hasn't customized them yet
+    const defaultsA = ['A 플레이어', 'Player A', 'A'];
+    const defaultsB = ['B 플레이어', 'Player B', 'B'];
+    let namesChanged = false;
+    if (defaultsA.includes(state.A.name)) {
+      state.A.name = (I18N[lang] && I18N[lang].playerA) || I18N.ko.playerA;
+      namesChanged = true;
+    }
+    if (defaultsB.includes(state.B.name)) {
+      state.B.name = (I18N[lang] && I18N[lang].playerB) || I18N.ko.playerB;
+      namesChanged = true;
+    }
+    if (namesChanged) {
+      if (typeof render === 'function') render();
+      if (typeof updateRoundsBar === 'function') updateRoundsBar();
+    }
   }
   function t(key) {
     const lang = currentLang || 'ko';
