@@ -183,7 +183,10 @@
     justify-content: center;
     border-radius: 999px;
     white-space: nowrap;
-  }
+    max-width: clamp(90px, 22vmin, 140px);   
+    overflow: hidden;                          
+    text-overflow: ellipsis;                   
+}
 
   .dice-btn {
     position: fixed;
