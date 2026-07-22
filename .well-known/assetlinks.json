@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.inkorea24.scorecounterpro",
+        "sha256_cert_fingerprints": ["C1:09:40:6A:67:2B:92:58:BD:6B:B4:0E:B1:99:A9:A5:BD:7E:7A:A7:47:84:56:F2:E9:E7:E6:AF:6D:6C:80:3A"]
+      }
+    }]
