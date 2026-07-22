@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head><meta name="google-site-verification" content="kjI_JBuIzfpCvJz4URuFhDTD0MQ5iBJg1Knvb2CyDoI" />
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>스코어 카운터 프로</title>
@@ -169,7 +169,7 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) translateX(54px);
+    transform: translate(-50%, -50%) translateX(90px);
     z-index: 9;
     font-size: clamp(13px, 2.6vmin, 17px);
     font-weight: 800;
@@ -183,10 +183,10 @@
     justify-content: center;
     border-radius: 999px;
     white-space: nowrap;
-    max-width: clamp(90px, 22vmin, 140px);   
-    overflow: hidden;                          
-    text-overflow: ellipsis;                   
-}
+    max-width: clamp(90px, 22vmin, 140px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   .dice-btn {
     position: fixed;
@@ -1531,6 +1531,11 @@
       if (typeof render === 'function') render();
       if (typeof updateRoundsBar === 'function') updateRoundsBar();
     }
+    // renderSingleHistory rebuilds its own markup (including the label and
+    // "no records" text) without data-i18n attributes, so it falls out of
+    // sync with the rest of the UI until something else happens to re-render
+    // it. Re-run it here so counter-mode language switches take effect right away.
+    if (typeof renderSingleHistory === 'function') renderSingleHistory();
   }
   function t(key) {
     const lang = currentLang || 'ko';
