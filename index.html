@@ -42,6 +42,12 @@
     position: relative;
     transition: background 0.25s ease;
   }
+  /* section A shares its top-left corner with the fixed game-start button
+     and round-wins pill (.rounds-bar); reserve room so its centered content
+     (starting with the name label) doesn't render underneath them. */
+  #section-slot-0 {
+    padding-top: calc(clamp(90px, 16vh, 130px) + env(safe-area-inset-top, 0px));
+  }
 
   /* focus mode: tap anywhere on the section to score +, only -/reset stay as small corner buttons */
   .app.focus-mode .buttons .plus { display: none; }
@@ -169,21 +175,21 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) translateX(90px);
+    transform: translate(-50%, -50%) translateY(56px);
     z-index: 9;
-    font-size: clamp(13px, 2.6vmin, 17px);
+    font-size: clamp(10px, 2vmin, 13px);
     font-weight: 800;
     color: var(--accent);
     background: #ffffff;
     box-shadow: 0 4px 14px rgba(0,0,0,0.35);
-    padding: 0 clamp(14px, 3vmin, 20px);
-    height: clamp(40px, 7vmin, 55px);
+    padding: 0 clamp(10px, 2.2vmin, 14px);
+    height: clamp(28px, 5vmin, 36px);
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 999px;
     white-space: nowrap;
-    max-width: clamp(90px, 22vmin, 140px);
+    max-width: clamp(80px, 20vmin, 120px);
     overflow: hidden;
     text-overflow: ellipsis;
   }
