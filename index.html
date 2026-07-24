@@ -662,14 +662,18 @@
 
   /* single counter view */
   .single-wrap {
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 20px;
     padding: 24px;
     padding-top: calc(env(safe-area-inset-top, 24px) + 70px);
     padding-bottom: env(safe-area-inset-bottom, 24px);
     background: #f8fafc;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .single-card {
     width: 100%;
@@ -768,6 +772,126 @@
   .single-plus:active { background: #a7f3d0; }
   .single-reset { background: #f1f5f9; color: #64748b; flex: 0.6; font-size: 20px; }
   .single-reset:active { background: #e2e8f0; }
+
+  /* shrink the main counter into a small summary row once extra counters
+     exist, so the multi-counter list becomes the visual focus instead */
+  .single-card.compact {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    gap: 12px;
+    border-radius: 18px;
+  }
+  .single-card.compact .single-label { font-size: 11px; }
+  .single-card.compact .single-count { font-size: 28px; }
+  .single-card.compact .single-steps,
+  .single-card.compact .single-custom-step { display: none; }
+  .single-card.compact .single-buttons {
+    width: auto;
+    gap: 6px;
+  }
+  .single-card.compact .single-btn {
+    min-height: unset;
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+    border-radius: 10px;
+  }
+  .single-card.compact .single-reset { flex: unset; width: 30px; font-size: 13px; }
+
+  .multi-counter-section {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .multi-counter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 700;
+    color: #64748b;
+    padding: 0 4px;
+  }
+  .multi-counter-add-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #0f172a;
+    color: #ffffff;
+    cursor: pointer;
+  }
+  .multi-counter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .multi-counter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 16px;
+    padding: 10px 14px;
+    color: #ffffff;
+  }
+  .multi-counter-name {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 4px 2px;
+  }
+  .multi-counter-name:focus { outline: none; background: rgba(255,255,255,0.15); border-radius: 8px; }
+  .multi-counter-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .multi-counter-count {
+    min-width: 32px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .multi-counter-btn {
+    border: none;
+    border-radius: 10px;
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    background: rgba(255,255,255,0.25);
+    color: #ffffff;
+  }
+  .multi-counter-btn:active { background: rgba(255,255,255,0.4); }
+  .multi-counter-btn.delete { background: rgba(0,0,0,0.15); font-size: 12px; }
+
+  .mc-confirm-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200;
+    display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  .mc-confirm-overlay.show { display: flex; }
+  .mc-confirm-box {
+    background: #ffffff; border-radius: 18px; padding: 20px; width: min(320px, 100%);
+  }
+  body.dark .mc-confirm-box { background: #1e293b; color: #f1f5f9; }
+  .mc-confirm-message { font-size: 14px; line-height: 1.5; margin-bottom: 16px; text-align: center; }
+  .mc-confirm-actions { display: flex; gap: 8px; }
+  .mc-confirm-btn { flex: 1; border: none; border-radius: 12px; padding: 11px 0; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .mc-confirm-btn.ok { background: #e11d48; color: #ffffff; }
+  .mc-confirm-btn.cancel { background: #f1f5f9; color: #475569; }
+  body.dark .mc-confirm-btn.cancel { background: #334155; color: #cbd5e1; }
 
   .single-history-bar {
     position: fixed;
@@ -959,6 +1083,8 @@
   body.dark .single-step-btn.active { background: #f1f5f9; color: #0f172a; }
   body.dark .single-custom-step input { background: #0b1220; border-color: #334155; color: #f1f5f9; }
   body.dark .single-custom-step button { background: #f1f5f9; color: #0f172a; }
+  body.dark .multi-counter-header { color: #64748b; }
+  body.dark .multi-counter-add-btn { background: #f1f5f9; color: #0f172a; }
 
   body.dark .timeline-list { color: #cbd5e1; }
   body.dark .timeline-entry { border-bottom-color: #334155; }
@@ -1311,6 +1437,24 @@
           <button class="single-btn single-plus" id="singlePlus">+</button>
         </div>
       </div>
+
+      <div class="multi-counter-section" id="multiCounterSection">
+        <div class="multi-counter-header">
+          <span data-i18n="multiCounterTitle">추가 카운터</span>
+          <button class="multi-counter-add-btn" id="multiCounterAddBtn" data-i18n="multiCounterAdd">+ 추가</button>
+        </div>
+        <div class="multi-counter-list" id="multiCounterList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mc-confirm-overlay" id="mcConfirmOverlay">
+    <div class="mc-confirm-box">
+      <div class="mc-confirm-message" id="mcConfirmMessage"></div>
+      <div class="mc-confirm-actions">
+        <button class="mc-confirm-btn cancel" id="mcConfirmCancelBtn"></button>
+        <button class="mc-confirm-btn ok" id="mcConfirmOkBtn"></button>
+      </div>
     </div>
   </div>
 
@@ -1360,6 +1504,8 @@
       newGame: '새 경기 시작', shareModalTitle: '결과 공유 📤', shareAction: '공유하기',
       exitConfirmText: '앱을 종료하시겠습니까?', resume: '실행', exit: '종료',
       historyLabel: '초기화 전 기록', counterLabel: '카운터', directInput: '직접 입력', apply: '적용', noRecords: '기록 없음',
+      multiCounterTitle: '추가 카운터', multiCounterAdd: '+ 추가', multiCounterDeleteConfirm: '이 카운터를 삭제할까요?',
+      mcConfirmOk: '삭제', mcConfirmCancel: '취소',
       win: '승리!', tiedExcl: '동점!', firstServe: '선공', setWord: '세트',
       resetWord: '리셋', timerEndTimeline: '⏰ 타이머 종료 — 최종 스코어',
       matchWinSuffix: '세트 승리로', matchWinSuffix2: '팀이 승리!',
@@ -1407,6 +1553,8 @@
       newGame: 'New game', shareModalTitle: 'Share result 📤', shareAction: 'Share',
       exitConfirmText: 'Exit the app?', resume: 'Resume', exit: 'Exit',
       historyLabel: 'Before reset', counterLabel: 'Counter', directInput: 'Custom', apply: 'Apply', noRecords: 'No records',
+      multiCounterTitle: 'Extra counters', multiCounterAdd: '+ Add', multiCounterDeleteConfirm: 'Delete this counter?',
+      mcConfirmOk: 'Delete', mcConfirmCancel: 'Cancel',
       win: 'wins!', tiedExcl: 'Tied!', firstServe: 'serves first', setWord: 'Set',
       resetWord: 'Reset', timerEndTimeline: '⏰ Timer ended — final score',
       matchWinSuffix: 'wins the match', matchWinSuffix2: '(by sets)!',
@@ -1457,6 +1605,7 @@
       <ul>
         <li>+1~+5 또는 직접 입력한 단위로 증감</li>
         <li>리셋 직전 값 최대 10개 기록</li>
+        <li>"추가 카운터"에서 이름 있는 카운터를 여러 개 추가/삭제 가능, 각각 독립적으로 +/−/리셋 (카운터가 하나라도 추가되면 메인 카운터는 작게 줄어들어요)</li>
       </ul>
       <h3>📤 결과 공유 / 🚪 종료</h3>
       <ul>
@@ -1500,6 +1649,7 @@
       <ul>
         <li>Adjust by +1~+5 or a custom amount</li>
         <li>Keeps up to 10 values from right before each reset</li>
+        <li>Add/delete multiple named counters under "Extra counters," each with its own +/−/reset (once you add one, the main counter shrinks into a compact row)</li>
       </ul>
       <h3>📤 Share / 🚪 Exit</h3>
       <ul>
@@ -1542,9 +1692,10 @@
     }
     // renderSingleHistory rebuilds its own markup (including the label and
     // "no records" text) without data-i18n attributes, so it falls out of
-    // sync with the rest of the UI until something else happens to re-render
-    // it. Re-run it here so counter-mode language switches take effect right away.
+    // sync with the rest of the UI until something else re-renders it.
+    // Re-run it here so counter-mode language switches take effect right away.
     if (typeof renderSingleHistory === 'function') renderSingleHistory();
+    if (typeof retranslateMultiCounterNames === 'function') retranslateMultiCounterNames(lang);
   }
   function t(key) {
     const lang = currentLang || 'ko';
@@ -1891,6 +2042,126 @@
   });
 
   renderSingleHistory();
+
+  // ---- multi-counter: several independently named/incrementable counters ----
+  const MULTI_COUNTER_COLORS = ['#2563eb', '#38bdf8', '#059669', '#eab308', '#ea580c', '#a855f7', '#64748b', '#dc2626'];
+  let multiCounters = [];
+  try { multiCounters = JSON.parse(localStorage.getItem('multiCounters') || '[]'); } catch (e) { multiCounters = []; }
+  const multiCounterList = document.getElementById('multiCounterList');
+  const multiCounterAddBtn = document.getElementById('multiCounterAddBtn');
+
+  function saveMultiCounters() {
+    localStorage.setItem('multiCounters', JSON.stringify(multiCounters));
+  }
+
+  // only retranslates a counter's name if it's still exactly the auto-given
+  // default ("카운터 1" / "Counter 1" etc.) in either language — a
+  // user-renamed counter is left alone, same rule as the A/B player names.
+  function retranslateMultiCounterNames(lang) {
+    const newLabel = (I18N[lang] && I18N[lang].counterLabel) || I18N.ko.counterLabel;
+    let changed = false;
+    multiCounters.forEach(c => {
+      const match = c.name.match(/^(.+?)\s+(\d+)$/);
+      if (match && (match[1] === I18N.ko.counterLabel || match[1] === I18N.en.counterLabel) && match[1] !== newLabel) {
+        c.name = `${newLabel} ${match[2]}`;
+        changed = true;
+      }
+    });
+    if (changed) { saveMultiCounters(); renderMultiCounters(); }
+  }
+
+  function renderMultiCounters() {
+    document.querySelector('.single-card').classList.toggle('compact', multiCounters.length > 0);
+    multiCounterList.innerHTML = '';
+    multiCounters.forEach((c, i) => {
+      const row = document.createElement('div');
+      row.className = 'multi-counter-row';
+      row.style.background = c.color || MULTI_COUNTER_COLORS[i % MULTI_COUNTER_COLORS.length];
+      row.innerHTML = `
+        <input class="multi-counter-name" value="${c.name}" data-id="${c.id}">
+        <div class="multi-counter-controls">
+          <button class="multi-counter-btn minus" data-id="${c.id}">−</button>
+          <span class="multi-counter-count" data-id="${c.id}">${c.count}</span>
+          <button class="multi-counter-btn plus" data-id="${c.id}">+</button>
+          <button class="multi-counter-btn reset" data-id="${c.id}">↺</button>
+          <button class="multi-counter-btn delete" data-id="${c.id}">✕</button>
+        </div>`;
+      multiCounterList.appendChild(row);
+    });
+  }
+
+  multiCounterAddBtn.addEventListener('click', () => {
+    const id = Date.now().toString(36) + Math.floor(Math.random() * 1000);
+    multiCounters.push({
+      id,
+      name: `${t('counterLabel')} ${multiCounters.length + 1}`,
+      count: 0,
+      color: MULTI_COUNTER_COLORS[multiCounters.length % MULTI_COUNTER_COLORS.length]
+    });
+    saveMultiCounters();
+    renderMultiCounters();
+    feedback('tap');
+  });
+
+  // custom confirm modal — native confirm()/alert() can be blocked in
+  // sandboxed previews and some app WebViews, which made the delete button
+  // look completely unresponsive.
+  const mcConfirmOverlay = document.getElementById('mcConfirmOverlay');
+  const mcConfirmMessage = document.getElementById('mcConfirmMessage');
+  const mcConfirmOkBtn = document.getElementById('mcConfirmOkBtn');
+  const mcConfirmCancelBtn = document.getElementById('mcConfirmCancelBtn');
+  function showMcConfirm(message) {
+    return new Promise((resolve) => {
+      mcConfirmMessage.textContent = message;
+      mcConfirmOkBtn.textContent = t('mcConfirmOk');
+      mcConfirmCancelBtn.textContent = t('mcConfirmCancel');
+      mcConfirmOverlay.classList.add('show');
+      function cleanup(result) {
+        mcConfirmOverlay.classList.remove('show');
+        mcConfirmOkBtn.removeEventListener('click', onOk);
+        mcConfirmCancelBtn.removeEventListener('click', onCancel);
+        resolve(result);
+      }
+      function onOk() { cleanup(true); }
+      function onCancel() { cleanup(false); }
+      mcConfirmOkBtn.addEventListener('click', onOk);
+      mcConfirmCancelBtn.addEventListener('click', onCancel);
+    });
+  }
+
+  multiCounterList.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.multi-counter-btn');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const c = multiCounters.find(x => x.id === id);
+    if (!c) return;
+    if (btn.classList.contains('plus')) { c.count++; }
+    else if (btn.classList.contains('minus')) { c.count--; }
+    else if (btn.classList.contains('reset')) { c.count = 0; }
+    else if (btn.classList.contains('delete')) {
+      const ok = await showMcConfirm(t('multiCounterDeleteConfirm'));
+      if (!ok) return;
+      multiCounters = multiCounters.filter(x => x.id !== id);
+      saveMultiCounters();
+      renderMultiCounters();
+      return;
+    }
+    saveMultiCounters();
+    renderMultiCounters();
+    feedback('tap');
+  });
+
+  multiCounterList.addEventListener('change', (e) => {
+    if (!e.target.classList.contains('multi-counter-name')) return;
+    const id = e.target.dataset.id;
+    const c = multiCounters.find(x => x.id === id);
+    if (!c) return;
+    c.name = e.target.value.trim() || c.name;
+    e.target.value = c.name;
+    saveMultiCounters();
+  });
+
+  renderMultiCounters();
 
   // ---- mode switching ----
   const modeAB = document.getElementById('modeAB');
@@ -2760,6 +3031,7 @@
     if (!btn) return;
     if (btn.classList.contains('action')) return;
     if (btn.id === 'singlePlus' || btn.id === 'singleMinus' || btn.id === 'singleReset') return;
+    if (btn.classList.contains('multi-counter-btn') || btn.id === 'multiCounterAddBtn') return;
     feedback('tap');
   });
 </script>
