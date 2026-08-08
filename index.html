@@ -658,6 +658,41 @@
     color: #ffffff;
   }
 
+  /* premium badge + modal */
+  .hidden { display: none; }
+  .premium-btn {
+    border: none;
+    background: #78350f;
+    color: #fde68a;
+    font-size: clamp(12px, 2.2vmin, 15px);
+    font-weight: 800;
+    padding: clamp(7px, 1.6vmin, 10px) clamp(11px, 2.4vmin, 15px);
+    border-radius: 999px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .premium-btn.is-premium { background: #166534; color: #bbf7d0; }
+  .premium-btn.trial-ended { animation: premiumPulse 1.6s ease-in-out infinite; }
+  @keyframes premiumPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.55); }
+    50% { box-shadow: 0 0 0 6px rgba(245,158,11,0.25); }
+  }
+  .premium-perks { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .premium-perks li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.5; }
+  .premium-perks li .check { color: #34d399; flex-shrink: 0; }
+  .premium-status-line { font-size: 12px; color: #94a3b8; margin-bottom: 12px; }
+  .premium-price { font-size: 22px; font-weight: 800; text-align: center; margin: 6px 0 16px; }
+  .premium-buy-btn {
+    width: 100%; border: none; background: #f59e0b; color: #1e1300; border-radius: 14px;
+    padding: 13px 0; font-size: 15px; font-weight: 800; cursor: pointer; margin-bottom: 6px;
+  }
+  .locked-badge {
+    position: absolute; top: 3px; left: 3px; font-size: 9px; background: rgba(0,0,0,0.4);
+    border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
+  }
+  body.dark .premium-status-line { color: #64748b; }
+
   .view { display: none; }
   .view.visible { display: block; }
 
@@ -1131,6 +1166,7 @@
       <button class="mode-btn active" id="modeAB">A / B</button>
       <button class="mode-btn" id="modeSingle" data-i18n="modeCounter">카운터</button>
     </div>
+    <button class="premium-btn" id="premiumBtn"></button>
     <button class="timer-badge" id="timerBadge"></button>
   </div>
 
@@ -1339,6 +1375,20 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="premiumOverlay">
+    <div class="modal-card">
+      <div class="modal-title" data-i18n="premiumModalTitle">프리미엄 ⭐</div>
+      <div class="premium-status-line" id="premiumStatusLine"></div>
+      <ul class="premium-perks">
+        <li><span class="check">✔</span><span data-i18n="perkSlots">저장 슬롯 6개 (무료는 3개)</span></li>
+        <li><span class="check">✔</span><span data-i18n="perkWatermark">공유 이미지에 워터마크 없음</span></li>
+      </ul>
+      <div class="premium-price">990원</div>
+      <button class="premium-buy-btn" id="premiumBuyBtn" data-i18n="premiumBuyBtn">프리미엄 구매하기</button>
+      <button class="modal-close-btn" id="premiumCloseBtn" data-i18n="close">닫기</button>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="timerOverlay">
     <div class="modal-card">
       <div class="modal-title" data-i18n="timerModalTitle">타이머 ⏱️</div>
@@ -1496,6 +1546,7 @@
       slotsLabel: '설정 저장 슬롯', slotSave: '저장', slotLoad: '불러오기',
       slotEmpty: '비어있음', slotSaved: '저장됨', slotConfirmLoad: '이 슬롯을 불러오면 현재 설정이 바뀌어요. 계속할까요?',
       slotDefault1: '설정1', slotDefault2: '설정2', slotDefault3: '설정3',
+      slotDefault4: '설정4', slotDefault5: '설정5', slotDefault6: '설정6',
       openManual: '📖 사용설명서 보기', manualModalTitle: '📖 사용설명서',
       export: '내보내기', import: '가져오기',
       timerModalTitle: '타이머 ⏱️', start: '시작',
@@ -1517,6 +1568,16 @@
       restoreError: '코드를 읽을 수 없어요. 내보내기한 코드를 그대로 붙여넣어주세요.',
       gameResultTitle: '🏆 경기 결과', appWatermark: '스코어 카운터 프로',
       shareTitleText: '경기 결과',
+      premiumModalTitle: '프리미엄 ⭐', perkSlots: '저장 슬롯 6개 (무료는 3개)', perkWatermark: '공유 이미지에 워터마크 없음',
+      premiumBuyBtn: '프리미엄 구매하기', premiumBadgeOn: '⭐ 프리미엄', premiumBadgeTrial: '⭐ 체험 {n}/3', premiumBadgeOff: '⭐ 프리미엄 보기',
+      trialEndedNotice: '무료 체험이 끝났어요! 위쪽 ⭐ 버튼을 눌러 프리미엄 혜택을 계속 이용해보세요.',
+      premiumStatusOn: '프리미엄 이용 중이에요. 감사합니다!',
+      premiumStatusTrial: '지금은 무료 체험 중이에요 (새 경기 시작 {n}/3). 체험이 끝나면 혜택이 잠겨요.',
+      premiumStatusOff: '무료 버전이에요. 구매하면 혜택이 계속 열려있어요.',
+      premiumOnlyStore: '이 기능은 앱(Play 스토어에서 설치한 버전)에서만 결제할 수 있어요.',
+      premiumPurchaseDone: '구매 완료! 프리미엄이 활성화됐어요.',
+      premiumPurchaseFail: '구매를 완료하지 못했어요. 다시 시도해주세요.',
+      slotLockedMsg: '이 슬롯은 프리미엄 전용이에요. 구매하면 6개까지 다 쓸 수 있어요.',
     },
     en: {
       gameStart: '▶ Start Game', gamePause: '⏸ ', gamePlay: '▶ ',
@@ -1545,6 +1606,7 @@
       slotsLabel: 'Saved setting slots', slotSave: 'Save', slotLoad: 'Load',
       slotEmpty: 'Empty', slotSaved: 'Saved', slotConfirmLoad: 'Loading this slot will overwrite current settings. Continue?',
       slotDefault1: 'Slot 1', slotDefault2: 'Slot 2', slotDefault3: 'Slot 3',
+      slotDefault4: 'Slot 4', slotDefault5: 'Slot 5', slotDefault6: 'Slot 6',
       openManual: '📖 View User Guide', manualModalTitle: '📖 User Guide',
       export: 'Export', import: 'Import',
       timerModalTitle: 'Timer ⏱️', start: 'Start',
@@ -1566,6 +1628,16 @@
       restoreError: "Couldn't read the code. Please paste the exported code exactly.",
       gameResultTitle: '🏆 Game Result', appWatermark: 'Score Counter Pro',
       shareTitleText: 'Game Result',
+      premiumModalTitle: 'Premium ⭐', perkSlots: '6 save slots (free: 3)', perkWatermark: 'No watermark on shared images',
+      premiumBuyBtn: 'Buy Premium', premiumBadgeOn: '⭐ Premium', premiumBadgeTrial: '⭐ Trial {n}/3', premiumBadgeOff: '⭐ View Premium',
+      trialEndedNotice: 'Your free trial has ended! Tap the ⭐ button above to keep the premium perks going.',
+      premiumStatusOn: "You're on Premium. Thank you!",
+      premiumStatusTrial: "You're on a free trial right now (New Game {n}/3). These perks lock once the trial ends.",
+      premiumStatusOff: "You're on the free version. Buy Premium to keep these perks unlocked for good.",
+      premiumOnlyStore: 'This can only be purchased in the app (the version installed from the Play Store).',
+      premiumPurchaseDone: 'Purchase complete! Premium is now active.',
+      premiumPurchaseFail: "Couldn't complete the purchase. Please try again.",
+      slotLockedMsg: 'This slot is Premium-only. Buy Premium to use all 6 slots.',
     }
   };
 
@@ -1594,12 +1666,19 @@
         <li>듀스 규칙: 2점 차가 나야 승리</li>
         <li>경기 집중 모드: 화면 전체 탭으로 점수 증가, −/초기화는 구석 버튼</li>
       </ul>
+      <h3>⭐ 프리미엄</h3>
+      <ul>
+        <li>"새 경기 시작"을 처음 3번 누르는 동안은 프리미엄 혜택이 무료 체험으로 열려요. 그 이후엔 프리미엄(990원, 1회 결제)을 구매해야 계속 쓸 수 있어요.</li>
+        <li>카운터 모드 사용은 체험 횟수에 포함되지 않아요.</li>
+        <li>프리미엄 혜택: 설정 저장 슬롯 6개(무료 3개), 공유 이미지 워터마크 없음.</li>
+        <li>상단 ⭐ 배지를 언제든 눌러서 현재 상태 확인하거나 구매할 수 있어요.</li>
+      </ul>
       <h3>⚙️ 설정</h3>
       <ul>
         <li>소리·진동·다크모드·화면 꺼짐 방지·음성 안내(TTS)</li>
         <li>언어 / Language: 한국어 ↔ English 즉시 전환 (이 설명서도 같이 바뀜)</li>
         <li>앱 강조색, 커스텀 증감 단위 추가</li>
-        <li><b>설정 저장 슬롯</b>: 설정1/2/3에 이름 붙여 각각 저장/불러오기 (예: "배구용", "탁구용")</li>
+        <li><b>설정 저장 슬롯</b>: 설정1~6에 이름 붙여 각각 저장/불러오기 (예: "배구용", "탁구용")</li>
         <li>이 사용설명서도 설정 맨 아래 📖 버튼으로 언제든 다시 볼 수 있어요</li>
       </ul>
       <h3>🔢 카운터 모드</h3>
@@ -1610,7 +1689,7 @@
       </ul>
       <h3>📤 결과 공유 / 🚪 종료</h3>
       <ul>
-        <li>현재 점수 또는 경기 결과를 이미지로 공유</li>
+        <li>현재 점수 또는 경기 결과를 이미지로 공유 (무료 버전은 워터마크 포함, 프리미엄은 워터마크 없음)</li>
         <li>뒤로가기 버튼 누르면 종료 확인 팝업 표시 (홈 화면 설치 앱에서 가장 안정적)</li>
       </ul>
     `,
@@ -1638,12 +1717,19 @@
         <li>Deuce rule: must win by 2 points</li>
         <li>Focus mode: tap anywhere to score; −/reset stay as small corner buttons</li>
       </ul>
+      <h3>⭐ Premium</h3>
+      <ul>
+        <li>The first 3 times you tap "New Game," Premium perks are unlocked for free as a trial. After that, buy Premium (990 KRW, one-time) to keep them.</li>
+        <li>Counter-mode usage doesn't count toward the trial.</li>
+        <li>Premium: 6 save slots (free: 3), and no watermark on shared images.</li>
+        <li>Tap the ⭐ badge at the top anytime to check your status or buy Premium.</li>
+      </ul>
       <h3>⚙️ Settings</h3>
       <ul>
         <li>Sound, vibration, dark mode, keep-screen-on, voice announcements (TTS)</li>
         <li>Language: switch Korean ↔ English instantly (this guide follows too)</li>
         <li>Accent color, custom step amounts</li>
-        <li><b>Setting slots</b>: name and save/load up to 3 setups (e.g. "Volleyball", "Table Tennis")</li>
+        <li><b>Setting slots</b>: name and save/load up to 6 setups (e.g. "Volleyball", "Table Tennis")</li>
         <li>Reopen this guide anytime via the 📖 button at the bottom of Settings</li>
       </ul>
       <h3>🔢 Counter Mode</h3>
@@ -1654,7 +1740,7 @@
       </ul>
       <h3>📤 Share / 🚪 Exit</h3>
       <ul>
-        <li>Share the current score or match result as an image</li>
+        <li>Share the current score or match result as an image (free version includes a watermark; Premium removes it)</li>
         <li>Pressing back shows an exit confirmation (most reliable when installed to the home screen)</li>
       </ul>
     `
@@ -1697,6 +1783,7 @@
     // Re-run it here so counter-mode language switches take effect right away.
     if (typeof renderSingleHistory === 'function') renderSingleHistory();
     if (typeof retranslateMultiCounterNames === 'function') retranslateMultiCounterNames(lang);
+    if (typeof updatePremiumUI === 'function') updatePremiumUI();
   }
   function t(key) {
     const lang = currentLang || 'ko';
@@ -1731,11 +1818,124 @@
     order: ['A', 'B'] // order[0] = top slot, order[1] = bottom slot
   };
 
+  // ---- premium: free + trial + Play Billing unlock (Digital Goods API) ----
+  // Counter-mode usage never bumps the trial counter; only completing a
+  // full A/B match ("새 경기 시작") counts, per the current design.
+  let currentLang = (saved.settings && saved.settings.lang) || 'ko';
+  const PREMIUM_SKU = 'premium_unlock';
+  const TRIAL_LIMIT = 3;
+  let premiumPurchased = localStorage.getItem('sc_premium_purchased') === 'true';
+  let trialUses = parseInt(localStorage.getItem('sc_trial_uses') || '0', 10);
+
+  function isPremiumActive() { return premiumPurchased || trialUses < TRIAL_LIMIT; }
+  function maxSlots() { return isPremiumActive() ? 6 : 3; }
+
+  function bumpTrialUse() {
+    if (premiumPurchased) return;
+    if (trialUses < TRIAL_LIMIT) {
+      trialUses++;
+      localStorage.setItem('sc_trial_uses', String(trialUses));
+      if (trialUses === TRIAL_LIMIT && localStorage.getItem('sc_trial_end_notice_shown') !== 'true') {
+        localStorage.setItem('sc_trial_end_notice_shown', 'true');
+        alert(t('trialEndedNotice'));
+      }
+    }
+    updatePremiumUI();
+  }
+
+  async function getDigitalGoodsService() {
+    if (!('getDigitalGoodsService' in window)) return null;
+    try { return await window.getDigitalGoodsService('https://play.google.com/billing'); }
+    catch (e) { return null; }
+  }
+
+  async function checkExistingPurchase() {
+    const service = await getDigitalGoodsService();
+    if (!service) return;
+    try {
+      const purchases = await service.listPurchases();
+      if (purchases && purchases.some(p => p.itemId === PREMIUM_SKU)) {
+        premiumPurchased = true;
+        localStorage.setItem('sc_premium_purchased', 'true');
+        updatePremiumUI();
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  async function purchasePremium() {
+    const service = await getDigitalGoodsService();
+    if (!service || typeof PaymentRequest === 'undefined') {
+      alert(t('premiumOnlyStore'));
+      return;
+    }
+    try {
+      const details = await service.getDetails([PREMIUM_SKU]);
+      if (!details || !details.length) {
+        alert(t('premiumPurchaseFail'));
+        return;
+      }
+      const request = new PaymentRequest(
+        [{ supportedMethods: 'https://play.google.com/billing', data: { sku: PREMIUM_SKU } }],
+        { total: { label: 'Total', amount: { currency: 'KRW', value: '990' } } }
+      );
+      const response = await request.show();
+      await response.complete('success');
+      premiumPurchased = true;
+      localStorage.setItem('sc_premium_purchased', 'true');
+      updatePremiumUI();
+      alert(t('premiumPurchaseDone'));
+      premiumOverlay.classList.remove('show');
+    } catch (err) {
+      console.error(err);
+      alert(t('premiumPurchaseFail'));
+    }
+  }
+
+  const premiumBtn = document.getElementById('premiumBtn');
+  const premiumOverlay = document.getElementById('premiumOverlay');
+  const premiumCloseBtn = document.getElementById('premiumCloseBtn');
+  const premiumStatusLine = document.getElementById('premiumStatusLine');
+  const premiumBuyBtn = document.getElementById('premiumBuyBtn');
+
+  function updatePremiumUI() {
+    if (premiumPurchased) {
+      premiumBtn.textContent = t('premiumBadgeOn');
+      premiumBtn.classList.add('is-premium');
+      premiumBtn.classList.remove('trial-ended');
+      premiumStatusLine.textContent = t('premiumStatusOn');
+      premiumBuyBtn.classList.add('hidden');
+    } else if (trialUses < TRIAL_LIMIT) {
+      premiumBtn.textContent = t('premiumBadgeTrial').replace('{n}', trialUses);
+      premiumBtn.classList.remove('is-premium');
+      premiumBtn.classList.remove('trial-ended');
+      premiumStatusLine.textContent = t('premiumStatusTrial').replace('{n}', trialUses);
+      premiumBuyBtn.classList.remove('hidden');
+    } else {
+      premiumBtn.textContent = t('premiumBadgeOff');
+      premiumBtn.classList.remove('is-premium');
+      premiumBtn.classList.add('trial-ended');
+      premiumStatusLine.textContent = t('premiumStatusOff');
+      premiumBuyBtn.classList.remove('hidden');
+    }
+    if (typeof renderSettingsSlots === 'function') renderSettingsSlots();
+  }
+
+  premiumBtn.addEventListener('click', () => {
+    updatePremiumUI();
+    premiumOverlay.classList.add('show');
+  });
+  premiumCloseBtn.addEventListener('click', () => premiumOverlay.classList.remove('show'));
+  premiumOverlay.addEventListener('click', (e) => {
+    if (e.target === premiumOverlay) premiumOverlay.classList.remove('show');
+  });
+  premiumBuyBtn.addEventListener('click', purchasePremium);
+  checkExistingPurchase();
+  updatePremiumUI();
+
   const sectionEls = [document.getElementById('section-slot-0'), document.getElementById('section-slot-1')];
   let serveTeam = null;
   let timelineLog = Array.isArray(saved.timelineLog) ? saved.timelineLog : [];
   let customSteps = Array.isArray(saved.settings && saved.settings.customSteps) ? saved.settings.customSteps.slice() : [];
-  let currentLang = (saved.settings && saved.settings.lang) || 'ko';
 
   const timelinePanel = document.getElementById('timelinePanel');
   const timelineList = document.getElementById('timelineList');
@@ -2463,6 +2663,7 @@
     document.getElementById('matchWinOverlay').classList.remove('show');
   });
   document.getElementById('matchNewGameBtn').addEventListener('click', () => {
+    bumpTrialUse();
     roundWins.A = 0;
     roundWins.B = 0;
     setHistory = [];
@@ -2638,7 +2839,7 @@
     if (document.visibilityState === 'visible' && wakeLockToggle.checked && !wakeLock) requestWakeLock();
   });
 
-  // ---- settings save slots (설정1/설정2/설정3) ----
+  // ---- settings save slots (설정1~6, 4~6번은 프리미엄 전용) ----
   function gatherSettingsPayload() {
     return {
       A: { color: state.A.color, name: state.A.name, step: state.A.step },
@@ -2694,15 +2895,19 @@
   function renderSettingsSlots() {
     const wrap = document.getElementById('settingsSlots');
     wrap.innerHTML = '';
-    [1, 2, 3].forEach(n => {
+    const limit = maxSlots();
+    for (let n = 1; n <= 6; n++) {
       const slotId = 'slot' + n;
       const slot = slotsData[slotId] || {};
+      const locked = n > limit;
       const row = document.createElement('div');
       row.className = 'slot-row';
+      if (locked) row.style.opacity = '0.55';
 
       const nameInput = document.createElement('input');
       nameInput.type = 'text';
       nameInput.value = slot.name || t('slotDefault' + n);
+      nameInput.disabled = locked;
       nameInput.addEventListener('change', () => {
         slotsData[slotId] = Object.assign({}, slotsData[slotId], { name: nameInput.value.trim() || t('slotDefault' + n) });
         saveSlotsData(slotsData);
@@ -2712,6 +2917,7 @@
       saveBtn.className = 'slot-save-btn';
       saveBtn.textContent = t('slotSave');
       saveBtn.addEventListener('click', () => {
+        if (locked) { alert(t('slotLockedMsg')); premiumOverlay.classList.add('show'); return; }
         slotsData[slotId] = {
           name: nameInput.value.trim() || t('slotDefault' + n),
           savedAt: Date.now(),
@@ -2726,6 +2932,7 @@
       loadBtn.className = 'slot-load-btn' + (slot.data ? '' : ' empty');
       loadBtn.textContent = t('slotLoad');
       loadBtn.addEventListener('click', () => {
+        if (locked) { alert(t('slotLockedMsg')); premiumOverlay.classList.add('show'); return; }
         if (!slot.data) return;
         if (!confirm(t('slotConfirmLoad'))) return;
         applySettingsPayload(slot.data);
@@ -2734,14 +2941,14 @@
 
       const status = document.createElement('span');
       status.className = 'slot-status';
-      status.textContent = slot.data ? t('slotSaved') : t('slotEmpty');
+      status.textContent = locked ? '🔒' : (slot.data ? t('slotSaved') : t('slotEmpty'));
 
       row.appendChild(nameInput);
       row.appendChild(saveBtn);
       row.appendChild(loadBtn);
       row.appendChild(status);
       wrap.appendChild(row);
-    });
+    }
   }
   renderSettingsSlots();
 
@@ -2894,9 +3101,11 @@
       ctx.fillText(`${t('setWord')} ${roundWins.A} : ${roundWins.B}`, half, H * 0.78);
     }
 
-    ctx.font = `${Math.round(H * 0.045)}px sans-serif`;
-    ctx.fillStyle = 'rgba(255,255,255,0.65)';
-    ctx.fillText(t('appWatermark'), half, H * 0.94);
+    if (!isPremiumActive()) {
+      ctx.font = `${Math.round(H * 0.045)}px sans-serif`;
+      ctx.fillStyle = 'rgba(255,255,255,0.65)';
+      ctx.fillText(t('appWatermark'), half, H * 0.94);
+    }
   }
 
   function drawMatchSummaryCard(canvas) {
@@ -2958,9 +3167,11 @@
       W / 2, H * 0.9
     );
 
-    ctx.font = `${Math.round(H * 0.04)}px sans-serif`;
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.fillText(t('appWatermark'), W / 2, H * 0.96);
+    if (!isPremiumActive()) {
+      ctx.font = `${Math.round(H * 0.04)}px sans-serif`;
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.fillText(t('appWatermark'), W / 2, H * 0.96);
+    }
   }
 
   function openShare(drawFn) {
