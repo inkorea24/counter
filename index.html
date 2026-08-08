@@ -1917,7 +1917,10 @@
       premiumStatusLine.textContent = t('premiumStatusOff');
       premiumBuyBtn.classList.remove('hidden');
     }
-    if (typeof renderSettingsSlots === 'function') renderSettingsSlots();
+    // wrapped in try/catch: this can run before slotsData exists (e.g. via
+    // applyLanguage's initial call at page load), and a plain typeof guard
+    // doesn't protect against that for a not-yet-initialized `let` variable.
+    try { if (typeof renderSettingsSlots === 'function') renderSettingsSlots(); } catch (e) { /* not ready yet, later calls will catch up */ }
   }
 
   premiumBtn.addEventListener('click', () => {
@@ -1930,7 +1933,6 @@
   });
   premiumBuyBtn.addEventListener('click', purchasePremium);
   checkExistingPurchase();
-  updatePremiumUI();
 
   const sectionEls = [document.getElementById('section-slot-0'), document.getElementById('section-slot-1')];
   let serveTeam = null;
@@ -3246,6 +3248,12 @@
     if (btn.classList.contains('multi-counter-btn') || btn.id === 'multiCounterAddBtn') return;
     feedback('tap');
   });
+
+  // premium badge's first paint happens here, after every other variable
+  // (slotsData etc.) this function's renderSettingsSlots() call depends on
+  // has already been initialized above — calling it any earlier throws and
+  // silently aborts the rest of this script, breaking every button on the page.
+  updatePremiumUI();
 </script>
 </body>
 </html>
