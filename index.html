@@ -1844,9 +1844,19 @@
   }
 
   async function getDigitalGoodsService() {
-    if (!('getDigitalGoodsService' in window)) return null;
-    try { return await window.getDigitalGoodsService('https://play.google.com/billing'); }
-    catch (e) { return null; }
+    if (!('getDigitalGoodsService' in window)) {
+      window.__dgsDiag = 'API 자체가 없음 (앱이 완전히 인증된 상태로 안 열림)';
+      return null;
+    }
+    try {
+      const s = await window.getDigitalGoodsService('https://play.google.com/billing');
+      window.__dgsDiag = s ? '정상 획득됨' : '서비스가 null 반환';
+      return s;
+    }
+    catch (e) {
+      window.__dgsDiag = '호출 중 에러: ' + (e && e.message ? e.message : e);
+      return null;
+    }
   }
 
   async function checkExistingPurchase() {
@@ -1865,7 +1875,7 @@
   async function purchasePremium() {
     const service = await getDigitalGoodsService();
     if (!service || typeof PaymentRequest === 'undefined') {
-      alert(t('premiumOnlyStore'));
+      alert(t('premiumOnlyStore') + '\n[진단] ' + (window.__dgsDiag || '정보 없음') + (typeof PaymentRequest === 'undefined' ? ' / PaymentRequest 미지원' : ''));
       return;
     }
     try {
